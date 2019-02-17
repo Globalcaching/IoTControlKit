@@ -1,0 +1,37 @@
+﻿@using IoTControlKit.Services
+<div id="systemMessages" class="system-messages">
+    @{
+        var gmsgs = NotificationService.Instance.GetMessages(this.Context);
+        if (gmsgs != null)
+        {
+            foreach (var msg in gmsgs.ErrorMessages)
+            {
+                <div class="alert alert-danger alert-dismissible systemMessage" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    @msg
+                </div>
+            }
+            foreach (var msg in gmsgs.WarningMessages)
+            {
+                <div class="alert alert-warning alert-dismissible systemMessage" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    @msg
+                </div>
+            }
+            foreach (var msg in gmsgs.InfoMessages)
+            {
+                <div class="alert alert-info alert-dismissible systemMessage" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    @msg
+                </div>
+            }
+            foreach (var msg in gmsgs.SuccessMessages)
+            {
+                <div class="alert alert-success alert-dismissible systemMessage" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    @msg
+                </div>
+            }
+        }
+    }
+</div>

@@ -1,0 +1,230 @@
+﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+a.navbar-brand {
+  white-space: normal;
+  text-align: center;
+  word-break: break-all;
+}
+
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+  font-size: 14px;
+}
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.border-top {
+  border-top: 1px solid #e5e5e5;
+}
+.border-bottom {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow {
+  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+button.accept-policy {
+  font-size: 1rem;
+  line-height: inherit;
+}
+
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  /* Margin bottom by footer height */
+  margin-bottom: 60px;
+}
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  white-space: nowrap;
+  /* Set the fixed height of the footer here */
+  height: 60px;
+  line-height: 60px; /* Vertically center the text there */
+}
+
+
+tbody tr.highlight td {
+    background-color: #00A0FF;
+    color: white;
+}
+
+tbody tr.logInfo td {
+    background-color: white;
+    color: black;
+}
+
+tbody tr.logWarning td {
+    background-color: yellow;
+    color: black;
+}
+
+tbody tr.logError td {
+    background-color: red;
+    color: white;
+}
+
+tbody tr.logAutoScroll td {
+    background-color: cyan;
+    color: white;
+}
+
+tbody tr.logClear td {
+    background-color: gainsboro;
+    color: black;
+}
+
+.fileinput-button {
+    position: relative;
+    overflow: hidden;
+}
+
+    .fileinput-button input {
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin: 0;
+        opacity: 0;
+        -ms-filter: 'alpha(opacity=0)';
+        font-size: 200px;
+        direction: ltr;
+        cursor: pointer;
+    }
+
+.system-messages {
+    position: absolute;
+    z-index: 100;
+    top: 50px;
+    width: 50%;
+    align-self: center;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+}
+
+.subPagedListTable {
+    width: 100%;
+}
+
+.subPagedListCell1 {
+    width: 30px;
+}
+
+.subPagedListCell2 {
+    background-color: #FFFFFF;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.subPagedListTd {
+    background-color: #7AA5CC; /*transparent; */ /* #a5b9cc; */ /*  #7AA5CC;  */
+}
+
+.glyphicon-flipped {
+    -o-transform: scaleX(-1);
+    -moz-transform: scaleX(-1);
+    -webkit-transform: scaleX(-1);
+    -ms-transform: scaleX(-1);
+    transform: scaleX(-1);
+}
+
+.cursor {
+    cursor: pointer;
+}
+
+.pagedListColumnHeader {
+    vertical-align: top;
+}
+
+    .pagedListColumnHeader input {
+        width: 100%;
+    }
+
+.pagedListColumnRow {
+    vertical-align: top;
+}
+
+.pagedList-buttonColumn {
+    width: 1px;
+    padding-left: 0 !important;
+    padding-right: 4px !important;
+}
+
+
+.table > thead > tr > th {
+    border-bottom: 1px solid #ddd;
+    vertical-align: top;
+}
+
+.error input {
+    border: 1px solid red;
+}
+
+
+.information-panel {
+    max-height: 300px;
+    overflow: auto;
+    border: 1px solid #d0d0d0;
+    padding: 5px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+}
+
+
+.modal.full-modal-width {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+}
+
+.modal-dialog.full-screen {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    position: fixed;
+}
+
+.modal-content.modal-full-content {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    border: 0;
+    border-radius: 5px !important;
+    box-shadow: none;
+    margin: 20px !important;
+}
+
+.modal-body.modal-full-body {
+    position: absolute;
+    top: 50px;
+    bottom: 60px;
+    width: 100%;
+    font-weight: 300;
+    overflow: auto;
+}
+
+.modal-footer.modal-full-footer {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 60px;
+    padding: 10px;
+}

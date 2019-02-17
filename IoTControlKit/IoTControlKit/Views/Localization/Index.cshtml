@@ -1,0 +1,172 @@
+﻿@model IoTControlKit.ViewModels.BaseViewModel
+
+@{
+    ViewData["Title"] = Html.T("Localization");
+}
+
+<div>
+    <button type="button" class="btn btn-primary" onclick="editRecord(null)">@Html.T("New")</button>
+    <button type="button" class="btn btn-success" onclick="importTranslations()">@Html.T("Import translations")</button>
+    <input id="fileupload" type="file" name="file" accept=".xml">
+</div>
+
+<div id="recordsList"></div>
+
+<div class="modal fade" id="dialog-editRecord" tabindex="-1" role="dialog" aria-labelledby="editRecordLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">@Html.T("Close")</span></button>
+                <h4 class="modal-title" id="editRecordLabel">@Html.T("Edit Culture")</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" class="form-horizontal">
+                    <div class="form-group">
+                        <label for="Name" class="col-sm-3 control-label">
+                            @Html.T("Name"):
+                        </label>
+                        <div class="col-sm-9">
+                            <input class="form-control" name="Name" id="Name" data-bind='textInput: Name' />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="Description" class="col-sm-3 control-label">
+                            @Html.T("Description"):
+                        </label>
+                        <div class="col-sm-9">
+                            <input class="form-control" name="Description" id="Description" data-bind='textInput: Description' />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="saveRecord()" data-bind="enable: Name()!=null && Name()!='' && Description()!=null && Description()!=''">@Html.T("Save")</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" onclick="cancelEditRecord()">@Html.T("Cancel")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File upload dialog -->
+<div class="modal fade" id="dialog-fileupload" tabindex="-1" role="dialog" aria-labelledby="fileuploadLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="fileuploadLabel">@Html.T("Uploading file")...</h4>
+            </div>
+            <div class="modal-body">
+                @Html.T("File is being uploaded")...
+                <div id="progress" class="progress">
+                    <div class="progress-bar progress-bar-success"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var recordsList;
+    var activeRecord;
+
+    var viewModel = {};
+    viewModel.Name = ko.observable('').extend({ required: "" });
+    viewModel.Description = ko.observable('');
+    ko.applyBindings(viewModel);
+
+    $(function () {
+        $('#fileupload').fileupload({
+            url: '@Url.Action("ImportLocalizationCultureText", "Localization")',
+            autoUpload: true,
+            progressall: function (e, data) {
+                var progress = parseInt(data.loaded / data.total * 100, 10);
+                $('#progress .progress-bar').css('width', progress + '%');
+            },
+            done: function (e, data) { }
+        });
+
+        $('#fileupload').bind('fileuploadstart', function (e) {
+            $('#dialog-fileupload').modal({ show: true, backdrop: 'static', keyboard: false });
+            return true;
+        });
+
+        $('#fileupload').bind('fileuploadstop', function (e) {
+            $('#dialog-fileupload').modal('hide');
+            setTimeout(function () {
+                window.location.reload(true);
+            }, 200);
+            return true;
+        });
+
+        $('#fileupload').hide();
+
+
+        CreatePagedList('#recordsList', "@Url.Action("GetLocalizationCultures", "Localization")", function (pagedList) {
+            recordsList = pagedList;
+            pagedList.addColumn("Name", "@Html.T("Name")")
+                .itemToHtml(function (item) { return "<img src='/Media/flags/" + item.Name.substring(3, 5) + ".png' /> " + htmlEncode(item.Name); });
+            pagedList.addColumn("Description", "@Html.T("Description")")
+                .itemToHtml(function (item) { return htmlEncode(item.Description); });
+            pagedList.addButton("Edit", "@Html.T("Translations")", "btn btn-success btn-sm")
+                .onclick(function (item) { editTranslations(item); });
+            pagedList.addButton("Edit", "@Html.T("Edit")", "btn btn-primary btn-sm")
+                .showIf(function (item) { return item.Name != 'en-US'; })
+                .onclick(function (item) { editRecord(item); });
+            pagedList.addButton("Delete", "@Html.T("Delete")", "btn btn-danger btn-sm")
+                .showIf(function (item) { return item.Name != 'en-US'; })
+                .onclick(function (item) { deleteRecord(item); });
+            pagedList.addButton("Export", "@Html.T("Export")", "btn btn-primary btn-sm")
+                .onclick(function (item) { exportTranslations(item); });
+
+            pagedList.refresh();
+        });
+    });
+
+    function importTranslations() {
+        $("#fileupload").trigger("click");
+    }
+
+    function editTranslations(item) {
+        window.location.href = '@Url.Action("LocalizationTranslations", "Localization")' + '/' + item.Id;
+    }
+
+    function exportTranslations(item) {
+        window.location.href = '@Url.Action("ExportLocalizationCultureText", "Localization")' + '/' + item.Id;
+    }
+
+    function editRecord(item) {
+        if (item == null) {
+            activeRecord = {};
+            activeRecord.Id = -1;
+            activeRecord.Name = '';
+            activeRecord.Description = '';
+        }
+        else {
+            activeRecord = item;
+        }
+        viewModel.Name(activeRecord.Name);
+        viewModel.Description(activeRecord.Description);
+        $('#dialog-editRecord').appendTo('body').modal();
+    }
+
+    function cancelEditRecord() {
+        activeRecord = null;
+    }
+
+    function deleteRecord(item) {
+        showConfirmDeleteDialog("@Html.T("Culture")", function () {
+            $.post('@Url.Action("DeleteLocalizationCulture", "Localization")', { item: item })
+                .always(function () {
+                    recordsList.refresh();
+                });
+        });
+    }
+
+    function saveRecord() {
+        activeRecord.Description = viewModel.Description();
+        activeRecord.Name = viewModel.Name();
+        $.post('@Url.Action("SaveLocalizationCulture", "Localization")', { item: activeRecord })
+            .always(function () {
+                recordsList.refresh();
+            });
+    }
+</script>

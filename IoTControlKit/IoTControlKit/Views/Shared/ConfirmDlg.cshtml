@@ -1,0 +1,53 @@
+﻿<div class="modal fade" id="confirmDialog" tabindex="-1" role="dialog" aria-labelledby="confirmDialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">@Html.T("Close")</span></button>
+                <h4 class="modal-title" id="confirmDialogTitle"></h4>
+            </div>
+            <div class="modal-body" style="max-height:600px;overflow:auto">
+                <p id="confirmDialogMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="confirmDialogButton" class="btn btn-danger" data-dismiss="modal">@Html.T("Yes")</button>
+                <button type="button" id="confirmDialogNoButton" class="btn btn-primary" data-dismiss="modal">@Html.T("No")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var __confirmFunc;
+
+    var showConfirmDialog = function (title, message, confirmFunction, confirmButtonText, confirmButtonNoText) {
+        __confirmFunc = confirmFunction;
+
+        $("#confirmDialogTitle").html(title);
+        $("#confirmDialogMessage").html(message);
+
+        if ((confirmButtonText != null || confirmButtonText != undefined) && confirmButtonText != '') {
+            $('#confirmDialogButton').html(confirmButtonText);
+        }
+        if ((confirmButtonNoText != null || confirmButtonNoText != undefined) && confirmButtonNoText != '') {
+            $('#confirmDialogNoButton').html(confirmButtonNoText);
+        }
+
+        $("#confirmDialog").appendTo('body').modal();
+    }
+
+    var showConfirmDeleteDialog = function(entity, confirmFunction) {
+        showConfirmDialog('@Html.T("Confirm delete")', '@Html.T("Are you sure you want to delete the _?")'.replace("_", entity), function () { confirmFunction() });
+    }
+
+    $(function () {
+        $('#confirmDialog').on('keypress', function (e) {
+            if (e.which == 13) {
+                $("#confirmDialogButton").click();
+                $(this).modal('hide');
+            }
+        });
+        $('#confirmDialogButton').on('click', function (e) {
+            __confirmFunc();
+        });
+    });
+</script>

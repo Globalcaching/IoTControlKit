@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "amd",
+    "noEmitOnError": true,
+    "noImplicitAny": false,
+    "removeComments": false,
+    "noImplicitUseStrict": true,
+    "sourceMap": true,
+    "target": "es5",
+    "lib": [ "es5", "dom", "es2015" ],
+    "allowJs": true
+  },
+  "files": [
+    "./typings/lodash.d.ts",
+    "./typings/jquery.d.ts",
+    "./shared/pagedList.ts"
+  ],
+  "compileOnSave": true
+}

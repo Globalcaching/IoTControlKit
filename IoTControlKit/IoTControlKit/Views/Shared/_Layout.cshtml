@@ -1,0 +1,128 @@
+﻿@model IoTControlKit.ViewModels.BaseViewModel
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - IoTControlKit</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/lib/blueimp-file-upload/css/jquery.fileupload-ui.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
+    <script src="~/lib/lodash/dist/lodash.min.js"></script>
+    <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
+    <script src="~/lib/jquery-ui/jquery-ui.min.js"></script>
+    <script src="~/lib/blueimp-file-upload/js/jquery.fileupload.js"></script>
+    <script src="~/lib/blueimp-file-upload/js/jquery.fileupload-jquery-ui.js"></script>
+    <script src="~/lib/signalr/signalr.min.js"></script>
+    <script src="~/js/BusyWaitDialog.js"></script>
+    <script src="~/lib/knockout/dist/knockout.js"></script>
+    <script src="~/lib/require//require.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <partial name="_PartialSystemMessages.cshtml" />
+    <partial name="ConfirmDlg.cshtml" />
+
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">IoTControlKit</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">@Html.T("Home")</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+                                Management
+                            </a>
+                            <div class="dropdown-menu">
+                                <a class="nav-link text-dark" asp-controller="Logger" asp-action="Index">@Html.T("Logging")</a>
+                                <a class="nav-link text-dark" asp-controller="Localization" asp-action="Index">@Html.T("Localization")</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            <h1>@ViewData["Title"]</h1>
+
+            @RenderBody()
+        </main>
+    </div>
+
+    @*<footer class="border-top footer text-muted">
+            <div class="container">
+                &copy; 2019 - IoTControlKit - <a asp-area="" asp-page="/Privacy">Privacy</a>
+            </div>
+        </footer>*@
+
+    @RenderSection("Scripts", required: false)
+
+    <script>
+        function appendSystemMessage(type, text) {
+            var s = '';
+            s += '<div class="alert alert-' + type + ' alert-dismissible systemMessage" role="alert">';
+            s += '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
+            s += htmlEncode(text);
+            s += '</div>';
+
+            $('#systemMessages').append(s);
+            $('.systemMessage').fadeTo(5000, 500, function () {
+                $(this).slideUp("slow", function () {
+                    $(this).remove();
+                });
+            });
+        }
+
+        jQuery(document).ready(function ($) {
+            $('.systemMessage').fadeTo(5000, 500, function () {
+                $(this).slideUp("slow", function () {
+                    $(this).remove();
+                });
+            });
+
+            $(document).ajaxStart(function () {
+            });
+            $(document).ajaxSend(function (event, jqxhr, settings) {
+            });
+            $(document).ajaxComplete(function (event, xhr, settings) {
+                if (xhr.responseJSON != null) {
+                    if (xhr.responseJSON.NotificationMessages != undefined && xhr.responseJSON.NotificationMessages != null) {
+                        for (var i = 0; i < xhr.responseJSON.NotificationMessages.ErrorMessages.length; i++) {
+                            appendSystemMessage("danger", xhr.responseJSON.NotificationMessages.ErrorMessages[i]);
+                        }
+                        for (var i = 0; i < xhr.responseJSON.NotificationMessages.WarningMessages.length; i++) {
+                            appendSystemMessage("warning", xhr.responseJSON.NotificationMessages.WarningMessages[i]);
+                        }
+                        for (var i = 0; i < xhr.responseJSON.NotificationMessages.InfoMessages.length; i++) {
+                            appendSystemMessage("info", xhr.responseJSON.NotificationMessages.InfoMessages[i]);
+                        }
+                        for (var i = 0; i < xhr.responseJSON.NotificationMessages.SuccessMessages.length; i++) {
+                            appendSystemMessage("success", xhr.responseJSON.NotificationMessages.SuccessMessages[i]);
+                        }
+                    }
+                }
+            });
+            $(document).ajaxError(function (event, jqxhr, settings, thrownError) {
+            });
+            $(document).ajaxSuccess(function (event, xhr, settings) {
+            });
+            $(document).ajaxStop(function () {
+            });
+        });
+    </script>
+</body>
+</html>

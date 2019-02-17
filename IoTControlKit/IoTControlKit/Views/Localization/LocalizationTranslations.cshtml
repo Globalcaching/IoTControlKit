@@ -1,0 +1,99 @@
+﻿@model IoTControlKit.ViewModels.BaseViewModel
+
+@{
+    ViewData["Title"] = $"{Html.T("Translations for")} {(Model.ResultData as IoTControlKit.Models.Localization.LocalizationCulture).Description} ({(Model.ResultData as IoTControlKit.Models.Localization.LocalizationCulture).Name})";
+}
+
+<div>
+    <button type="button" class="btn btn-default" onclick="window.location.href = '@Url.Action("Index","Localization")'">@Html.T("Main menu")</button>
+    <button type="button" class="btn btn-primary" onclick="exportTranslations()">@Html.T("Export")</button>
+</div>
+
+<div id="recordsList"></div>
+
+<div class="modal fade" id="dialog-editRecord" tabindex="-1" role="dialog" aria-labelledby="editRecordLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="editRecordLabel">@Html.T("Edit Culture")</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" class="form-horizontal">
+                    <div class="form-group">
+                        <label for="OriginalText" class="col-sm-3 control-label">
+                            @Html.T("Oridinal text"):
+                        </label>
+                        <div class="col-sm-9">
+                            <textarea class="form-control" rows="5" name="OriginalText" id="OriginalText" data-bind='textInput: OriginalText' readonly="readonly">
+                            </textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="TranslatedText" class="col-sm-3 control-label">
+                            @Html.T("Translation"):
+                        </label>
+                        <div class="col-sm-9">
+                            <textarea class="form-control" rows="5" name="TranslatedText" id="TranslatedText" data-bind='textInput: TranslatedText'>
+                            </textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="saveRecord()">@Html.T("Save")</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" onclick="cancelEditRecord()">@Html.T("Cancel")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var recordsList;
+    var activeRecord;
+
+    var viewModel = {};
+    viewModel.OriginalText = ko.observable('');
+    viewModel.TranslatedText = ko.observable('');
+    ko.applyBindings(viewModel);
+
+    $(function () {
+        CreatePagedList('#recordsList', "@Url.Action("GetLocalizationTranslations", "Localization", new { id = (Model.ResultData as IoTControlKit.Models.Localization.LocalizationCulture).Id })", function (pagedList) {
+            recordsList = pagedList;
+            pagedList.addColumn("OriginalText", "@Html.T("Original text")")
+                .enableFilter()
+                .enableSort()
+                .itemToHtml(function (item) { return htmlEncode(item.OriginalText); });
+            pagedList.addColumn("TranslatedText", "@Html.T("Translation")")
+                .enableFilter()
+                .enableSort()
+                .itemToHtml(function (item) { return htmlEncode(item.TranslatedText); });
+            pagedList.addButton("Edit", "@Html.T("Edit")", "btn btn-primary btn-sm")
+                .onclick(function (item) { editRecord(item); });
+
+            pagedList.refresh();
+        });
+    });
+
+    function editRecord(item) {
+        activeRecord = item;
+        viewModel.OriginalText(activeRecord.OriginalText);
+        viewModel.TranslatedText(activeRecord.TranslatedText);
+        $('#dialog-editRecord').appendTo('body').modal();
+    }
+
+    function exportTranslations() {
+        window.location.href = '@Url.Action("ExportLocalizationCultureText", "Localization")' + '/' + '@string.Format("{0}", (Model.ResultData as IoTControlKit.Models.Localization.LocalizationCulture).Id)';
+    }
+
+    function cancelEditRecord() {
+        activeRecord = null;
+    }
+
+    function saveRecord() {
+        activeRecord.TranslatedText = viewModel.TranslatedText();
+        $.post('@Url.Action("SaveLocalizationTranslation", "Localization")', { item: activeRecord })
+            .always(function () {
+                recordsList.refresh();
+            });
+    }
+</script>

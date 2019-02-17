@@ -1,0 +1,118 @@
+﻿@model IoTControlKit.ViewModels.BaseViewModel
+
+<div>
+    <button type="button" id="pausebutton" class="btn btn-primary btn-xs" onclick="togglePause()">@Html.T("pause")</button>
+</div>
+<div>
+    <span>@Html.T("Set log (file) level"): </span>
+    <select id="logLevel">
+        @foreach (var ll in Enum.GetNames(typeof(Microsoft.Extensions.Logging.LogLevel)))
+        {
+            if (IoTControlKit.Services.SettingsService.Instance.LogLevel.ToString() == ll)
+            {
+                <option value="@ll.ToString()" selected="selected">@ll.ToString()</option>
+            }
+            else
+            {
+                <option value="@ll.ToString()">@ll.ToString()</option>
+            }
+        }
+    </select>
+</div>
+<div id="logList"></div>
+
+<script>
+    var logMessages = @Html.Raw(Json.Serialize(Model.ResultData));
+    var inPause = false;
+    var logList;
+    var lastId = -1;
+
+    var LevelCritical = '123456';
+    var LevelError = '12345';
+    var LevelWarning = '1234';
+    var LevelInfo = '123';
+    var LevelTrace = '1';
+    var LevelDebug = '12';
+
+    function togglePause() {
+        if (inPause) {
+            inPause = false;
+            $('#pausebutton').text('@Html.T("pause")');
+        }
+        else {
+            inPause = true;
+            $('#pausebutton').text('@Html.T("continue")');
+        }
+        logList.refresh(true);
+    }
+
+    function downloadLogs() {
+        window.location.href = '@Url.Action("Download", "Logger")';
+    }
+
+    function checkForLogs() {
+        if (inPause) {
+            setTimeout(function () { checkForLogs() }, 1000);
+        }
+        else {
+            if (lastId < 0 && logMessages.length > 0) {
+                lastId = logMessages[logMessages.length - 1].Id;
+            }
+            $.get('@Url.Action("GetLastLogs", "Logger")', { lastId: lastId }, function (response) {
+                if (response != null) {
+                    for (var index = 0; index < response.length; index++) {                        
+                        logMessages.push(response[index]);                        
+                        lastId = response[index].Id;
+                    }
+                    if (logMessages.length > 10000) {
+                        logMessages.splice(0, logMessages.length-10000);
+                    }
+                    logList.refresh(true);
+                }
+            }).always(function () {
+                setTimeout(function () { checkForLogs() }, 2000);
+            });
+        }
+    }
+
+    $(function () {
+        $('#logLevel').change(function () {
+            $.post('@Url.Action("SetLogLevel", "Logger")', { level: $(this).val() });
+        });
+
+        CreatePagedList("#logList", null, function (pagedList) {
+            logList = pagedList;
+            logList.getStyling().rowStyles(function (item) {
+                var styles = ""
+                if (item['level'] == LevelCritical || item['level'] == LevelError) {
+                    styles = "background-color:rgb(255, 157, 157);";
+                }
+                else if (item['level'] == LevelWarning) {
+                    styles = "background-color:rgb(252, 255, 97);";
+                }
+                return styles;
+            });
+            logList.addColumn("Id", "@Html.T("Counter")")
+                .enableSort()
+                .enableFilter()
+                .itemToHtml(function (item) { return item.Id; });
+            logList.addColumn("date", "@Html.T("Time")")
+                .enableFilter()
+                .itemToHtml(function (item) { return htmlEncode(item.date); });
+            logList.addColumn("level", "@Html.T("Level")")
+                .enableFilter()
+                .itemToHtml(function (item) { return htmlEncode(item.level); });
+            logList.addColumn("text", "@Html.T("Message")")
+                .enableFilter()
+                .itemToHtml(function (item) { return htmlEncode(item.text); });
+            logList.getServer().data = logMessages;
+            logList.refresh();
+
+            logList.toggleSort(0);
+            logList.toggleSort(0);
+
+            setTimeout(function () { checkForLogs() }, 1000);
+        });
+    });
+
+</script>
