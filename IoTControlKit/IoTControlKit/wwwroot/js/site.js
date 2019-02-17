@@ -16,7 +16,7 @@ function CreatePagedList(elementOrId, url, callbackFunc) {
             result = new pagedList.PagedList(elementOrId, url);
             result.getStyling().rowStyles(function (item) {
                 var styles = "";
-                if (item['Obsolete']) {
+                if (item['Enabled']) {
                     styles = "text-decoration: line-through;";
                 }
 

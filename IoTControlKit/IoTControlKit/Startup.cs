@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using IoTControlKit.Helpers;
+using IoTControlKit.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
@@ -13,6 +15,9 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MQTTnet.AspNetCore;
+using MQTTnet.Protocol;
+using MQTTnet.Server;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -47,6 +52,26 @@ namespace IoTControlKit
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            //this adds a hosted mqtt server to the services
+            services.AddHostedMqttServer(builder =>
+            {
+                builder.WithDefaultEndpoint()
+                    .WithDefaultEndpointPort(1883)
+                    .WithApplicationMessageInterceptor((ctx) =>
+                    {
+                        Services.LoggerService.Instance.LogTrace($"MTTQ Broker=> From={ctx.ClientId} -> Message: Topic={ctx.ApplicationMessage?.Topic}, Payload={(ctx.ApplicationMessage?.Payload == null ? "" : Encoding.UTF8.GetString(ctx.ApplicationMessage.Payload))}, QoS={ctx.ApplicationMessage?.QualityOfServiceLevel}, Retain={ctx.ApplicationMessage?.Retain}");
+                    })
+                    .WithConnectionValidator((ctx) =>
+                    {
+                        ctx.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;
+                    });
+            });
+
+            //this adds tcp server support based on Microsoft.AspNetCore.Connections.Abstractions
+            services.AddMqttConnectionHandler();
+
+            //this adds websocket support
+            services.AddMqttWebSocketServerAdapter();
 
             services.AddHttpContextAccessor();
             services.AddMvc()
@@ -152,6 +177,10 @@ namespace IoTControlKit
                 });
             });
 
+            Task.Run(() =>
+            {
+                ApplicationService.Instance.Run();
+            });
         }
     }
 }

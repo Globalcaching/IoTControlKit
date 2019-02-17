@@ -8,6 +8,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MQTTnet.AspNetCore;
 using Serilog;
 using Serilog.Events;
 
@@ -74,10 +75,13 @@ namespace IoTControlKit
                 customPort = (from a in args where a.StartsWith("p=") select a.Substring(2)).FirstOrDefault() ?? customPort;
             }
             return WebHost.CreateDefaultBuilder(args)
-                .UseUrls($"http://*:{customPort}")
+                //.UseUrls($"http://*:{customPort}")
                 .UseKestrel(options =>
                 {
                     options.Limits.MaxRequestBodySize = null;
+                    options.ListenAnyIP(1883, l => l.UseMqtt());
+                    options.ListenAnyIP(int.Parse(customPort)); // default http pipeline
+
                 })
                 .UseStartup<Startup>()
                 .UseSerilog();
