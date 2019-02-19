@@ -57,6 +57,47 @@ Enabled bit not null,
 MQTTType nvarchar(255) not null,
 TcpServer nvarchar(255) not null UNIQUE
 )");
+
+                            db.Execute(@"create table if not exists DeviceController(
+Id integer PRIMARY KEY,
+MQTTClientId integer REFERENCES MQTTClient (Id),
+NormalizedName nvarchar(255),
+Name nvarchar(255),
+State nvarchar(255),
+Ready bit not null
+)");
+
+                            db.Execute(@"create table if not exists Device(
+Id integer PRIMARY KEY,
+DeviceControllerId integer not null REFERENCES DeviceController (Id),
+NormalizedName nvarchar(255),
+Name nvarchar(255),
+DeviceType nvarchar(255),
+Enabled bit not null
+)");
+
+                            db.Execute(@"create table if not exists DeviceProperty(
+Id integer PRIMARY KEY,
+DeviceId integer not null REFERENCES Device (Id),
+NormalizedName nvarchar(255),
+Name nvarchar(255),
+Retained bit,
+Settable bit,
+DataType nvarchar(255),
+Unit nvarchar(255),
+Format nvarchar(255)
+)");
+
+                            db.Execute(@"create table if not exists DevicePropertyValue(
+Id integer PRIMARY KEY,
+DevicePropertyId integer not null REFERENCES DeviceProperty (Id),
+Value nvarchar(255),
+LastReceivedValue nvarchar(255),
+LastSetValue nvarchar(255),
+LastReceivedValueAt datetime,
+LastSetValueAt datetime
+)");
+
                             newVersion = 1;
                             break;
                     }

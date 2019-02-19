@@ -38,8 +38,15 @@ namespace IoTControlKit.Services
         public void Run()
         {
             Database = new DatabaseService();
-            Database.Execute((db) =>
+            Database.ExecuteWithinTransaction((db, session) =>
             {
+                var dcl = db.Fetch<Models.Application.DeviceController>();
+                foreach (var dc in dcl)
+                {
+                    dc.Ready = false;
+                    db.Save(dc);
+                }
+
                 var pl = db.Query<Models.Application.MQTTClient>().Where(x => x.Enabled).ToList();
                 foreach (var p in pl)
                 {

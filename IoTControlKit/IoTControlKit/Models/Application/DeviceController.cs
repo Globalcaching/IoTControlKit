@@ -14,7 +14,7 @@ namespace IoTControlKit.Models.Application
     [NPoco.TableName("DeviceController")]
     public class DeviceController: BasePoco
     {
-        public long? MQTTId { get; set; }
+        public long? MQTTClientId { get; set; }
         public string NormalizedName { get; set; }
         public string Name { get; set; }
         public string State { get; set; }

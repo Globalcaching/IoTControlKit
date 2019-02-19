@@ -61,6 +61,7 @@ namespace IoTControlKit
                     {
                         Services.LoggerService.Instance.LogTrace($"MTTQ Broker=> From={ctx.ClientId} -> Message: Topic={ctx.ApplicationMessage?.Topic}, Payload={(ctx.ApplicationMessage?.Payload == null ? "" : Encoding.UTF8.GetString(ctx.ApplicationMessage.Payload))}, QoS={ctx.ApplicationMessage?.QualityOfServiceLevel}, Retain={ctx.ApplicationMessage?.Retain}");
                     })
+                    .WithStorage(new Services.MQTT.MQTTStorage())
                     .WithConnectionValidator((ctx) =>
                     {
                         ctx.ReturnCode = MqttConnectReturnCode.ConnectionAccepted;

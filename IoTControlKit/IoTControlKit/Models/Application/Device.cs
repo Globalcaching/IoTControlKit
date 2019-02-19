@@ -12,5 +12,6 @@ namespace IoTControlKit.Models.Application
         public string NormalizedName { get; set; }
         public string Name { get; set; }
         public string DeviceType { get; set; }
+        public bool Enabled { get; set; }
     }
 }
