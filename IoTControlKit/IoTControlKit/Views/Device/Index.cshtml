@@ -9,7 +9,7 @@
     function getDevicesList(controller) {
         var result = document.createElement('div');
         url = "@Url.Action("GetDevices", "Device", new { id = "1234a" })".replace("1234a", controller.Id);
-        CreatePagedList(divList, url, function (pagedList) {
+        CreatePagedList(result, url, function (pagedList) {
             pagedList.addColumn("Name", "@Html.T("Name")")
                 .itemToHtml(function (item) { return htmlEncode(item.Name); });
 

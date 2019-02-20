@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ViewModels\Authorization\" />
+    <Folder Include="wwwroot\fonts\" />
   </ItemGroup>
 
   <PropertyGroup>
