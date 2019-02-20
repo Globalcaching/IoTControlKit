@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using IoTControlKit.Hubs;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MQTTnet.AspNetCore;
@@ -19,6 +21,7 @@ namespace IoTControlKit
         public static IConfiguration Configuration { get; set; }
         public static IHostingEnvironment HostingEnvironment { get; set; }
         public static NLog.Logger Logger;
+        public static IHubContext<IoTControlKitHub> HubContext;
 
         private static CancellationTokenSource _cancellationTokenSource = new System.Threading.CancellationTokenSource();
 

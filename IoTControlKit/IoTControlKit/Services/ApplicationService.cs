@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace IoTControlKit.Services
 {
-    public class ApplicationService : BaseService
+    public partial class ApplicationService : BaseService
     {
         private static ApplicationService _uniqueInstance = null;
         private static object _lockObject = new object();

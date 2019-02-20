@@ -9,12 +9,8 @@ namespace IoTControlKit.ViewModels.Localization
     {
     }
 
-    public class LocalizationCultureViewModel : BaseViewModel
+    public class LocalizationCultureViewModel : PagedListViewModel<LocalizationCultureViewModelItem>
     {
-        public List<LocalizationCultureViewModelItem> Items { get; set; }
-        public long CurrentPage { get; set; }
-        public long PageCount { get; set; }
-        public long TotalCount { get; set; }
     }
 
 }

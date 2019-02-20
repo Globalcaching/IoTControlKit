@@ -50,3 +50,58 @@ function createFilterItemsFromList(list, textForAll) {
 function htmlEncode(value) {
     return $('<div/>').text(value).html().replace(/\n/g, "<br />");
 }
+
+
+var CortexxCoreHubInstance = {
+    callBacks: [],
+    hub: null,
+    hubAssigned: function () {
+    },
+    hubStarted: function () {
+    },
+    hubClosed: function () {
+    },
+    onDataChanged: function (tables, htmlElement, callback) {
+        var index = _.find(CortexxCoreHubInstance.callBacks, function (o) { return o === callBack; });
+        if (index === -1) {
+            CortexxCoreHubInstance.callBacks.push({ tables: tables, htmlElement: htmlElement, callback: callback });
+            if (htmlElement !== undefined) {
+                $('body').on('DOMNodeRemoved', htmlElement, function (event) {
+                    if (event.target === htmlElement || event.target.contains(htmlElement)) {
+                        CortexxCoreHubInstance.deregisterOnClient(callBackFunction);
+                    }
+                });
+            }
+        }
+    },
+    deregisterOnDataChanged: function (callBackFunction) {
+        var index = _.find(CortexxCoreHubInstance.callBacks, function (o) { return o === callBack; });
+        if (index > -1) {
+            CortexxCoreHubInstance.callBacks.splice(index, 1);
+        }
+    }
+};
+
+var __isUnloadingPage = false;
+
+window.addEventListener('beforeunload', function () {
+    __isUnloadingPage = true;
+    return true;
+}, false);
+
+$(function () {
+    CortexxCoreHubInstance.hub = new signalR.HubConnectionBuilder()
+        .withUrl("/hubs/IoTControlKitHub")
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+    CortexxCoreHubInstance.hubAssigned();
+    CortexxCoreHubInstance.hub.start().then(function () {
+        CortexxCoreHubInstance.hub.onclose(function (e) {
+            if (!__isUnloadingPage) {
+                CortexxCoreHubInstance.hubClosed();
+            }
+        });
+        CortexxCoreHubInstance.hubStarted();
+    }).catch(err => console.error(err.toString()));
+});

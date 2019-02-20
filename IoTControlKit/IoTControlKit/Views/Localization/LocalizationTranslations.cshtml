@@ -16,12 +16,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title" id="editRecordLabel">@Html.T("Edit Culture")</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">@Html.T("Close")</span></button>
             </div>
             <div class="modal-body">
                 <form role="form" class="form-horizontal">
                     <div class="form-group">
                         <label for="OriginalText" class="col-sm-3 control-label">
-                            @Html.T("Oridinal text"):
+                            @Html.T("Original text"):
                         </label>
                         <div class="col-sm-9">
                             <textarea class="form-control" rows="5" name="OriginalText" id="OriginalText" data-bind='textInput: OriginalText' readonly="readonly">

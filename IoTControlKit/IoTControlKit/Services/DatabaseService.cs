@@ -111,6 +111,10 @@ namespace IoTControlKit.Services
         public void OnDatabaseChanged(DatabaseChanges changes)
         {
             var c = changes;
+            Task.Run(() =>
+            {
+                Hubs.IoTControlKitHub.DataChanged(c.AffectedTables.ToArray());
+            });
             if (DatabaseChanged != null)
             {
                 foreach (var evh in DatabaseChanged.GetInvocationList())

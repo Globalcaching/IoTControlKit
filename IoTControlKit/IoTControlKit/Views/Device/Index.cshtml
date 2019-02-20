@@ -1,0 +1,49 @@
+﻿@{
+    ViewData["Title"] = "Devices";
+}
+
+<div id="recordsList"></div>
+
+<script>
+
+    function getDevicesList(controller) {
+        var result = document.createElement('div');
+        url = "@Url.Action("GetDevices", "Device", new { id = "1234a" })".replace("1234a", controller.Id);
+        CreatePagedList(divList, url, function (pagedList) {
+            pagedList.addColumn("Name", "@Html.T("Name")")
+                .itemToHtml(function (item) { return htmlEncode(item.Name); });
+
+            pagedList.refresh();
+
+            CortexxCoreHubInstance.onDataChanged(['Device'], result, function () {
+                pagedList.refresh();
+            });
+        });
+
+        return result;
+    }
+
+    CortexxCoreHubInstance.hubStarted = function () {
+        CreatePagedList('#recordsList', "@Url.Action("GetDeviceControllers", "Device")", function (pagedList) {
+            recordsList = pagedList;
+            pagedList.addColumn("NormalizedName", "@Html.T("Normalized Name")")
+                .itemToHtml(function (item) { return htmlEncode(item.NormalizedName); })
+                .onExpandItem(function (item) {
+                    return getDevicesList(item);
+                });
+            pagedList.addColumn("Name", "@Html.T("Name")")
+                .itemToHtml(function (item) { return htmlEncode(item.Name); });
+            pagedList.addColumn("State", "@Html.T("State")")
+                .itemToHtml(function (item) { return htmlEncode(item.State); });
+            pagedList.addColumn("Ready", "@Html.T("Ready")")
+                .itemToHtml(function (item) { return item.Ready; });
+
+            pagedList.refresh();
+
+            CortexxCoreHubInstance.onDataChanged(['DeviceController'], $('#recordsList').element, function () {
+                pagedList.refresh();
+            });
+        });
+    }
+
+</script>

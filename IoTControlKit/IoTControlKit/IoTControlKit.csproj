@@ -37,7 +37,6 @@
     <TypeScriptCompile Include="wwwroot\js\shared\elements.ts" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Controllers\" />
     <Folder Include="ViewModels\Authorization\" />
   </ItemGroup>
 
