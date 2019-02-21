@@ -42,7 +42,10 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">@Html.T("Home")</a>
                         </li>
-                        <li class="nav-item dropdown">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Device" asp-action="Index">@Html.T("Devices")</a>
+                        </li>
+                        <li class="nav-item dropdown ml-auto">
                             <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
                                 Management
                             </a>
@@ -50,9 +53,6 @@
                                 <a class="nav-link text-dark" asp-controller="Logger" asp-action="Index">@Html.T("Logging")</a>
                                 <a class="nav-link text-dark" asp-controller="Localization" asp-action="Index">@Html.T("Localization")</a>
                             </div>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Device" asp-action="Index">@Html.T("Devices")</a>
                         </li>
                     </ul>
                 </div>

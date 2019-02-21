@@ -26,5 +26,15 @@ namespace IoTControlKit.Services
             }
             return Database.GetPage<DeviceViewModel, DeviceViewModelItem>(page, pageSize, sortOn, sortAsc, "Name", sql);
         }
+
+        public DevicePropertyViewModel GetDeviceProperties(int page, int pageSize, long deviceId, string sortOn = "", bool sortAsc = true)
+        {
+            var sql = NPoco.Sql.Builder.Select("DeviceProperty.*")
+                .Append(", DevicePropertyValue.Value")
+                .From("DeviceProperty")
+                .LeftJoin("DevicePropertyValue").On("DeviceProperty.Id=DevicePropertyValue.DevicePropertyId")
+                .Where("DeviceProperty.DeviceId=@0", deviceId);
+            return Database.GetPage<DevicePropertyViewModel, DevicePropertyViewModelItem>(page, pageSize, sortOn, sortAsc, "Name", sql);
+        }
     }
 }

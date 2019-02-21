@@ -30,9 +30,14 @@ namespace IoTControlKit.Controllers
         [HttpPost]
         public ActionResult GetDevices(long id, int page, int pageSize, List<string> filterColumns, List<string> filterValues, string sortOn, bool? sortAsc)
         {
-            var filterName = ControllerHelper.GetFilterValue(filterColumns, filterValues, "OriginalText");
+            var filterName = ControllerHelper.GetFilterValue(filterColumns, filterValues, "Name");
             return Json(ApplicationService.Instance.GetDevices(page, pageSize, id, filterName, sortOn: sortOn, sortAsc: sortAsc ?? true));
         }
 
+        [HttpPost]
+        public ActionResult GetDeviceProperties(long id, int page, int pageSize, List<string> filterColumns, List<string> filterValues, string sortOn, bool? sortAsc)
+        {
+            return Json(ApplicationService.Instance.GetDeviceProperties(page, pageSize, id, sortOn: sortOn, sortAsc: sortAsc ?? true));
+        }
     }
 }

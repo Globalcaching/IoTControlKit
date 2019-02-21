@@ -16,7 +16,7 @@ function CreatePagedList(elementOrId, url, callbackFunc) {
             result = new pagedList.PagedList(elementOrId, url);
             result.getStyling().rowStyles(function (item) {
                 var styles = "";
-                if (item['Enabled']) {
+                if (item['Enabled'] !== undefined && !item['Enabled']) {
                     styles = "text-decoration: line-through;";
                 }
 
@@ -62,8 +62,8 @@ var CortexxCoreHubInstance = {
     hubClosed: function () {
     },
     onDataChanged: function (tables, htmlElement, callback) {
-        var index = _.find(CortexxCoreHubInstance.callBacks, function (o) { return o === callBack; });
-        if (index === -1) {
+        var index = _.find(CortexxCoreHubInstance.callBacks, function (o) { return o === callback; });
+        if (index === undefined) {
             CortexxCoreHubInstance.callBacks.push({ tables: tables, htmlElement: htmlElement, callback: callback });
             if (htmlElement !== undefined) {
                 $('body').on('DOMNodeRemoved', htmlElement, function (event) {
@@ -75,9 +75,19 @@ var CortexxCoreHubInstance = {
         }
     },
     deregisterOnDataChanged: function (callBackFunction) {
-        var index = _.find(CortexxCoreHubInstance.callBacks, function (o) { return o === callBack; });
+        var index = _.findIndex(CortexxCoreHubInstance.callBacks, function (o) { return o === callBackFunction; });
         if (index > -1) {
             CortexxCoreHubInstance.callBacks.splice(index, 1);
+        }
+    },
+    dataHasChanged: function (tables) {
+        for (var tableIndex = 0; tableIndex < tables.length; tableIndex++) {
+            for (var index = 0; index < CortexxCoreHubInstance.callBacks.length; index++) {
+                if (_.findIndex(CortexxCoreHubInstance.callBacks[index].tables, function (o) { return o === tables[tableIndex]; }) >= 0) {
+                    CortexxCoreHubInstance.callBacks[index].callback();
+                    break;
+                }
+            }
         }
     }
 };
@@ -97,6 +107,7 @@ $(function () {
 
     CortexxCoreHubInstance.hubAssigned();
     CortexxCoreHubInstance.hub.start().then(function () {
+        CortexxCoreHubInstance.hub.on("dataChanged", (tables) => { CortexxCoreHubInstance.dataHasChanged(tables); });
         CortexxCoreHubInstance.hub.onclose(function (e) {
             if (!__isUnloadingPage) {
                 CortexxCoreHubInstance.hubClosed();

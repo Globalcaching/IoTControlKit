@@ -70,6 +70,11 @@ namespace IoTControlKit.Services.MQTT
                             db.Save(device);
                             _devices.Add(device.NormalizedName, device);
                         }
+                        if (!device.Enabled)
+                        {
+                            device.Enabled = true;
+                            db.Save(device);
+                        }
                         if (parts.Count>1 && parts[1].StartsWith("$"))
                         {
                             //property of a device
