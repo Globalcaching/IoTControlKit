@@ -4,7 +4,55 @@
 
 <div id="recordsList"></div>
 
+<div class="modal fade" id="dialog-editDeviceProperty" tabindex="-1" role="dialog" aria-labelledby="editDevicePropertyLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="editDevicePropertyLabel">@Html.T("Edit Device Property Value")</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">@Html.T("Close")</span></button>
+            </div>
+            <div class="modal-body">
+                <form role="form" class="form-horizontal">
+                    <div class="form-group">
+                        <label for="DevicePropertyValue" class="col-sm-3 control-label">
+                            @Html.T("Value"):
+                        </label>
+                        <div class="col-sm-9">
+                            <input class="form-control" name="DevicePropertyValue" id="DevicePropertyValue" data-bind='textInput: DevicePropertyValue' />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-check-label col-sm-9 ml-sm-3">
+                            <input class="form-check-input" type="checkbox" name="InternalOnly" id="InternalOnly" data-bind='checked: InternalOnly'> @Html.T("Internal only")
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="saveDeviceProperty()">@Html.T("Apply")</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">@Html.T("Cancel")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    var viewModel = {};
+    viewModel.DevicePropertyValue = ko.observable('').extend({ required: "" });
+    viewModel.InternalOnly = ko.observable(false);
+    ko.applyBindings(viewModel);
+
+    var selectedItem;
+
+    function editDeviceProperty(item) {
+        selectedItem = item;
+        viewModel.DevicePropertyValue(item.Value);
+        $('#dialog-editDeviceProperty').appendTo('body').modal();
+    }
+
+    function saveDeviceProperty() {
+        $.post('@Url.Action("ChangeDevicePropertyValue", "Device")', { id: selectedItem.Id, value: viewModel.DevicePropertyValue(), internalOnly: viewModel.InternalOnly()});
+    }
 
     function getDevicePropertiesList(device) {
         var result = document.createElement('div');
@@ -28,6 +76,8 @@
                 .itemToHtml(function (item) { return htmlEncode(item.Value); });
             pagedList.addColumn("Settable", "@Html.T("Settable")")
                 .itemToHtml(function (item) { return item.Settable; });
+            pagedList.addButton("Edit", "@Html.T("Edit")", "btn btn-primary btn-sm")
+                .onclick(function (item) { editDeviceProperty(item); });
 
             pagedList.refresh();
 
@@ -73,6 +123,14 @@
                 });
             pagedList.addColumn("Name", "@Html.T("Name")")
                 .itemToHtml(function (item) { return htmlEncode(item.Name); });
+            pagedList.addColumn("Type", "@Html.T("Type")")
+                .itemToHtml(function (item)
+                {
+                    if (item.MQTTClientId != null) {
+                        return '@Html.T("MQTT Client")';
+                    }
+                    return '@Html.T("Unknown")';
+                });
             pagedList.addColumn("State", "@Html.T("State")")
                 .itemToHtml(function (item) { return htmlEncode(item.State); });
             pagedList.addColumn("Ready", "@Html.T("Ready")")

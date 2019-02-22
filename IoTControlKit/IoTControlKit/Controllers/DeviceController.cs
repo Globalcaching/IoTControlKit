@@ -39,5 +39,12 @@ namespace IoTControlKit.Controllers
         {
             return Json(ApplicationService.Instance.GetDeviceProperties(page, pageSize, id, sortOn: sortOn, sortAsc: sortAsc ?? true));
         }
+        
+        [HttpPost]
+        public ActionResult ChangeDevicePropertyValue(long id, string value, bool internalOnly)
+        {
+            ApplicationService.Instance.OnSetDevicePropertyValue(new List<ApplicationService.SetDeviceProperties>() { new ApplicationService.SetDeviceProperties() { DevicePropertyId = id, InternalOnly = internalOnly, Value = value } });
+            return Json(null);
+        }
     }
 }

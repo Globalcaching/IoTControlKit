@@ -7,11 +7,22 @@ namespace IoTControlKit.Services
 {
     public partial class ApplicationService : BaseService
     {
+        public class SetDeviceProperties
+        {
+            public long DevicePropertyId { get; set; }
+            public string Value { get; set; }
+            public bool InternalOnly { get; set; } = false;
+        }
+
         private static ApplicationService _uniqueInstance = null;
         private static object _lockObject = new object();
         private List<MQTT.Client> _mqttClients = new List<MQTT.Client>();
 
         public DatabaseService Database { get; private set; }
+        public Services.Schedulers.SchedulerService Schedular { get; private set; }
+
+        public delegate void SetDevicePropertyValueHandler(NPoco.Database db, List<SetDeviceProperties> properties);
+        public event SetDevicePropertyValueHandler SetDevicePropertyValue;
 
         private ApplicationService()
         {
@@ -32,6 +43,26 @@ namespace IoTControlKit.Services
                     }
                 }
                 return _uniqueInstance;
+            }
+        }
+
+        public void OnSetDevicePropertyValue(List<SetDeviceProperties> properties)
+        {
+            if (SetDevicePropertyValue != null)
+            {
+                ApplicationService.Instance.Database.ExecuteWithinTransaction((db, session) =>
+                {
+                    foreach (var evh in SetDevicePropertyValue.GetInvocationList())
+                    {
+                        try
+                        {
+                            evh.DynamicInvoke(db, properties);
+                        }
+                        catch
+                        {
+                        }
+                    }
+                });
             }
         }
 
@@ -58,10 +89,13 @@ namespace IoTControlKit.Services
                 }
             });
 
+            Schedular = new Schedulers.SchedulerService();
+
             foreach (var c in _mqttClients)
             {
                 c.Start();
             }
+            Schedular.Start();
 
             Database.DatabaseChanged += Database_DatabaseChanged;
         }

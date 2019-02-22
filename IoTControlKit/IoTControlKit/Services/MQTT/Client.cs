@@ -23,6 +23,7 @@ namespace IoTControlKit.Services.MQTT
 
         public virtual void Start()
         {
+            ApplicationService.Instance.SetDevicePropertyValue += Instance_SetDevicePropertyValue;
             ApplicationService.Instance.Database.ExecuteWithinTransaction((db, session) => 
             {
                 _deviceController = db.Query<Models.Application.DeviceController>().Where(x => x.MQTTClientId == _clientSetting.Id).FirstOrDefault();
@@ -50,6 +51,22 @@ namespace IoTControlKit.Services.MQTT
             _mqttClient.ApplicationMessageReceived += _mqttClient_ApplicationMessageReceived;
             PrepareFirstConnect();
             Connect();
+        }
+
+        private void Instance_SetDevicePropertyValue(NPoco.Database db, List<ApplicationService.SetDeviceProperties> properties)
+        {
+            if (_mqttClient.IsConnected)
+            {
+                SetDevicePropertyValue(db, properties);
+            }
+            else
+            {
+                //??
+            }
+        }
+
+        protected virtual void SetDevicePropertyValue(NPoco.Database db, List<ApplicationService.SetDeviceProperties> properties)
+        {
         }
 
         protected virtual void PrepareFirstConnect()
@@ -108,18 +125,22 @@ namespace IoTControlKit.Services.MQTT
 
         public void Dispose()
         {
-            ApplicationService.Instance.Database.ExecuteWithinTransaction((db, session) =>
+            if (_mqttClient != null)
             {
-                _deviceController.Ready = false;
-                db.Save(_deviceController);
-            });
-            if (_subscribed)
-            {
-                _subscribed = false;
-                _mqttClient.ApplicationMessageReceived -= _mqttClient_ApplicationMessageReceived;
+                ApplicationService.Instance.SetDevicePropertyValue -= Instance_SetDevicePropertyValue;
+                ApplicationService.Instance.Database.ExecuteWithinTransaction((db, session) =>
+                {
+                    _deviceController.Ready = false;
+                    db.Save(_deviceController);
+                });
+                if (_subscribed)
+                {
+                    _subscribed = false;
+                    _mqttClient.ApplicationMessageReceived -= _mqttClient_ApplicationMessageReceived;
+                }
+                _mqttClient.Dispose();
+                _mqttClient = null;
             }
-            _mqttClient.ApplicationMessageReceived += _mqttClient_ApplicationMessageReceived;
-            _mqttClient.Dispose();
         }
     }
 }

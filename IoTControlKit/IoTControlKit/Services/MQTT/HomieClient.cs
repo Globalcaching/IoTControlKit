@@ -10,6 +10,7 @@ namespace IoTControlKit.Services.MQTT
     {
         private Dictionary<string, Models.Application.Device> _devices;
         private Dictionary<long, Dictionary<string, Models.Application.DeviceProperty>> _properties;
+        private Dictionary<long, Models.Application.DeviceProperty> _propertyLookup; //DevicePropertyId -> DeviceProperty
         private Dictionary<long, long> _propertyValues; //DevicePropertyId -> Id
         private int _skipTopicParts = 1;
 
@@ -24,19 +25,106 @@ namespace IoTControlKit.Services.MQTT
             {
                 _devices = db.Fetch<Models.Application.Device>().ToDictionary(x => x.NormalizedName, x => x);
                 _properties = new Dictionary<long, Dictionary<string, Models.Application.DeviceProperty>>();
+                _propertyLookup = new Dictionary<long, Models.Application.DeviceProperty>();
                 foreach (var d in _devices.Values)
                 {
-                    _properties.Add(d.Id, db.Query<Models.Application.DeviceProperty>().Where(x => x.DeviceId == d.Id).ToList().ToDictionary(x => x.NormalizedName, x => x));
+                    var propsForDevice = db.Query<Models.Application.DeviceProperty>().Where(x => x.DeviceId == d.Id).ToList();
+                    _properties.Add(d.Id, propsForDevice.ToDictionary(x => x.NormalizedName, x => x));
+                    foreach (var dp in propsForDevice)
+                    {
+                        _propertyLookup.Add(dp.Id, dp);
+                    }
                 }
                 _propertyValues = db.Fetch<Models.Application.DevicePropertyValue>().ToDictionary(x => x.DevicePropertyId, x => x.Id);
             });
             _skipTopicParts = _clientSetting.BaseTopic.Split('/').Length-1;
         }
 
+        protected override void SetDevicePropertyValue(NPoco.Database db, List<ApplicationService.SetDeviceProperties> properties)
+        {
+            if (_propertyLookup != null)
+            {
+                foreach (var p in properties)
+                {
+                    if (_propertyLookup.TryGetValue(p.DevicePropertyId, out var devprop))
+                    {
+                        var v = p.Value;
+                        if (!string.IsNullOrEmpty(devprop.DataType))
+                        {
+                            switch (devprop.DataType.ToLower())
+                            {
+                                case "boolean":
+                                    if (string.Compare(p.Value, "false", true) == 0
+                                        || string.Compare(p.Value, "0", true) == 0
+                                        || string.Compare(p.Value, "off", true) == 0)
+                                    {
+                                        v = "false";
+                                    }
+                                    else
+                                    {
+                                        v = "true";
+                                    }
+                                    break;
+                                case "float":
+                                    //todo
+                                    break;
+                                case "integer":
+                                    //todo
+                                    break;
+                            }
+                        }
+                        Models.Application.DevicePropertyValue dpv = null;
+                        if (!_propertyValues.TryGetValue(p.DevicePropertyId, out var pv))
+                        {
+                            dpv = new Models.Application.DevicePropertyValue()
+                            {
+                                DevicePropertyId = p.DevicePropertyId
+                            };
+                            db.Save(dpv);
+                            _propertyValues.Add(p.DevicePropertyId, dpv.Id);
+                        }
+                        else
+                        {
+                            dpv = db.Query<Models.Application.DevicePropertyValue>().Where(x => x.Id == pv).First();
+                        }
+                        if (string.Compare(dpv.Value, v) != 0)
+                        {
+                            dpv.Value = v;
+                            dpv.LastSetValue = v;
+                            dpv.LastSetValueAt = DateTime.UtcNow;
+                            db.Save(dpv);
+                        }
+                        if (!p.InternalOnly && devprop.Settable == true && _mqttClient.IsConnected)
+                        {
+                            var deviceName = db.ExecuteScalar<string>("select NormalizedName from Device where Id=@0", devprop.DeviceId);
+                            try
+                            {
+                                _mqttClient.PublishAsync(new MqttApplicationMessage()
+                                {
+                                    Topic = $"{_clientSetting.BaseTopic.Replace("#", "")}{deviceName}/{devprop.NormalizedName}/set",
+                                    QualityOfServiceLevel = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce,
+                                    Retain = false,
+                                    Payload = System.Text.UTF8Encoding.UTF8.GetBytes(dpv.Value)
+                                }).Wait();
+                            }
+                            catch
+                            {
+                                //todo: revert?
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         protected override void ApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs e)
         {
             base.ApplicationMessageReceived(sender, e);
+
+            if (e.ClientId == _mqttClient.Options.ClientId)
+            {
+                return;
+            }
 
             //topic assumption:
             //subscription: homie/# (device)
@@ -116,6 +204,7 @@ namespace IoTControlKit.Services.MQTT
                                 };
                                 db.Save(deviceProperty);
                                 properties.Add(deviceProperty.NormalizedName, deviceProperty);
+                                _propertyLookup.Add(deviceProperty.Id, deviceProperty);
 
                                 var propertyValue = new Models.Application.DevicePropertyValue()
                                 {
