@@ -106,7 +106,46 @@ namespace IoTControlKit.Services
             {
                 if (changes.AffectedTables.Contains("MQTTClient"))
                 {
-                    //todo
+                    var cf = new ChangesFilter<Models.Application.MQTTClient>(changes);
+                    foreach (var p in cf.Updated)
+                    {
+                        var m = (from a in _mqttClients where a.ClientSetting.Id == p.Id select a).FirstOrDefault();
+                        if (m != null)
+                        {
+                            _mqttClients.Remove(m);
+                            m.Dispose();
+                        }
+                        if (p.Enabled)
+                        {
+                            var c = MQTT.ClientFactory.CreateClient(p);
+                            if (c != null)
+                            {
+                                _mqttClients.Add(c);
+                                c.Start();
+                            }
+                        }
+                    }
+                    foreach (var p in cf.Deleted)
+                    {
+                        var m = (from a in _mqttClients where a.ClientSetting.Id == p.Id select a).FirstOrDefault();
+                        if (m != null)
+                        {
+                            _mqttClients.Remove(m);
+                            m.Dispose();
+                        }
+                    }
+                    foreach (var p in cf.Added)
+                    {
+                        if (p.Enabled)
+                        {
+                            var c = MQTT.ClientFactory.CreateClient(p);
+                            if (c != null)
+                            {
+                                _mqttClients.Add(c);
+                                c.Start();
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -21,6 +21,8 @@ namespace IoTControlKit.Services.MQTT
             _subscribed = false;
         }
 
+        public Models.Application.MQTTClient ClientSetting => _clientSetting;
+
         public virtual void Start()
         {
             ApplicationService.Instance.SetDevicePropertyValue += Instance_SetDevicePropertyValue;

@@ -121,11 +121,6 @@ namespace IoTControlKit.Services.MQTT
         {
             base.ApplicationMessageReceived(sender, e);
 
-            if (e.ClientId == _mqttClient.Options.ClientId)
-            {
-                return;
-            }
-
             //topic assumption:
             //subscription: homie/# (device)
             //homie/X/Y/Z/$ (e.g. homie/lamp-eethoek-kastje/color/$datatype)
@@ -135,7 +130,7 @@ namespace IoTControlKit.Services.MQTT
 
             //X->Device, Y->DeviceProperty, Z->DevicePropertyValue
             var parts = e.ApplicationMessage.Topic.Split('/').Skip(_skipTopicParts).ToList();
-            if (parts.Any())
+            if (parts.Any() && parts[parts.Count-1] != "set")
             {
                 ApplicationService.Instance.Database.ExecuteWithinTransaction((db, session) =>
                 {

@@ -8,6 +8,24 @@ namespace IoTControlKit.Services
 {
     public partial class ApplicationService : BaseService
     {
+        public void SaveMQTT(Models.Application.MQTTClient item)
+        {
+            Database.ExecuteWithinTransaction((db, session) =>
+            {
+                db.Save(item);
+            });
+        }
+
+        public Models.Application.MQTTClient GetMQTT(long id)
+        {
+            Models.Application.MQTTClient result = null;
+            Database.Execute((db) =>
+            {
+                result = db.Query<Models.Application.MQTTClient>().Where(x => x.Id == id).FirstOrDefault();
+            });
+            return result;
+        }
+
         public DeviceControllerViewModel GetDeviceControllers(int page, int pageSize, string sortOn = "", bool sortAsc = true)
         {
             var sql = NPoco.Sql.Builder.Select("DeviceController.*")
