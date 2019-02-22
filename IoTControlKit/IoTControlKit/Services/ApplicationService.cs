@@ -52,16 +52,7 @@ namespace IoTControlKit.Services
             {
                 ApplicationService.Instance.Database.ExecuteWithinTransaction((db, session) =>
                 {
-                    foreach (var evh in SetDevicePropertyValue.GetInvocationList())
-                    {
-                        try
-                        {
-                            evh.DynamicInvoke(db, properties);
-                        }
-                        catch
-                        {
-                        }
-                    }
+                    SetDevicePropertyValue?.Invoke(db, properties);
                 });
             }
         }

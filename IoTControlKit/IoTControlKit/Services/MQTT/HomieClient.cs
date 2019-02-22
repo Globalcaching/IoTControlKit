@@ -103,7 +103,7 @@ namespace IoTControlKit.Services.MQTT
                                 {
                                     Topic = $"{_clientSetting.BaseTopic.Replace("#", "")}{deviceName}/{devprop.NormalizedName}/set",
                                     QualityOfServiceLevel = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce,
-                                    Retain = false,
+                                    Retain = true,
                                     Payload = System.Text.UTF8Encoding.UTF8.GetBytes(dpv.Value)
                                 }).Wait();
                             }
