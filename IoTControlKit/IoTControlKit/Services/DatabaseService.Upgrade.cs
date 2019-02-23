@@ -9,7 +9,7 @@ namespace IoTControlKit.Services
 {
     public partial class DatabaseService : BaseService
     {
-        private const long _targetDatabaseVersion = 1;
+        private const long _targetDatabaseVersion = 2;
 
         private Services.Database.BaseDatabaseService GetNewDatabaseInstance()
         {
@@ -100,6 +100,31 @@ LastSetValueAt datetime
 
                             newVersion = 1;
                             break;
+                        case 1:
+                            db.Execute(@"create table if not exists Flow(
+Id integer PRIMARY KEY,
+Name nvarchar(255) not null,
+Enabled bit not null
+)");
+
+                            db.Execute(@"create table if not exists FlowComponent(
+Id integer PRIMARY KEY,
+Guid nvarchar(255) not null,
+Type nvarchar(255) not null,
+DevicePropertyId integer not null,
+Value nvarchar(255) not null
+)");
+
+                            db.Execute(@"create table if not exists FlowConnector(
+Id integer PRIMARY KEY,
+Guid nvarchar(255) not null,
+TargetFlowComponentd integer not null REFERENCES FlowComponent (Id),
+SourceFlowComponentd integer not null REFERENCES FlowComponent (Id),
+SourcePort nvarchar(255) not null
+)");
+
+                            newVersion = 2;
+                            break;
                     }
                     if (fromVersion != newVersion)
                     {
@@ -114,7 +139,7 @@ LastSetValueAt datetime
 
         private void InitDatabaseContent(NPoco.Database db)
         {
-            db.Execute("insert or ignore into MQTTClient (Name, BaseTopic, Enabled, MQTTType, TcpServer) values ('Local', 'homie/#',  1, 'homie', 'localhost')");
+            db.Execute("insert or ignore into MQTTClient (Name, BaseTopic, Enabled, MQTTType, TcpServer) values ('Local', 'Homey/homie/#',  1, 'homie', 'localhost')");
         }
     }
 }

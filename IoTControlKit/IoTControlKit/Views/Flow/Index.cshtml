@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "Flow Editor";
+}
+
+<div id="flowEditor"></div>
+
+<script>
+
+    var flowEditorObj;
+
+    $(function () {
+        require(["flowEditor"],
+            function (flowEditor) {
+                flowEditorObj = flowEditor.createFlowEditor('#flowEditor');
+            });
+    });
+</script>

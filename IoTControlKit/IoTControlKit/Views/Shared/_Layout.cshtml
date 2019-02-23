@@ -9,13 +9,14 @@
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" href="~/lib/blueimp-file-upload/css/jquery.fileupload-ui.css" />
+    <link rel="stylesheet" href="~/lib/jointjs/joint.min.css" />
     <link rel="stylesheet" href="~/css/glyphicon.css" />
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
     <script src="~/lib/jquery/dist/jquery.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>
-    <script src="~/lib/lodash/dist/lodash.min.js"></script>
+    <script src="~/lib/lodash/dist/lodash.js"></script>
     <script src="~/lib/moment/min/moment-with-locales.min.js"></script>
     <script src="~/lib/jquery-ui/jquery-ui.min.js"></script>
     <script src="~/lib/blueimp-file-upload/js/jquery.fileupload.js"></script>
@@ -23,6 +24,8 @@
     <script src="~/lib/signalr/signalr.min.js"></script>
     <script src="~/js/BusyWaitDialog.js"></script>
     <script src="~/lib/knockout/dist/knockout.js"></script>
+    <script src="~/lib/backbone/backbone.js"></script>
+    <script src="~/lib/jointjs/joint.min.js"></script>
     <script src="~/lib/require//require.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
@@ -44,6 +47,9 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Device" asp-action="Index">@Html.T("Devices")</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Flow" asp-action="Index">@Html.T("Flows")</a>
                         </li>
                         <li class="nav-item dropdown ml-auto">
                             <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">

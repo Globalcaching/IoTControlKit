@@ -6,7 +6,8 @@
         'elements': "/js/shared/elements",
         'pagedList': "/js/shared/pagedList",
         'pagedList-elements': "/js/shared/pagedList-elements",
-        'contextMenu': "/js/shared/contextMenu"
+        'contextMenu': "/js/shared/contextMenu",
+        'flowEditor': "/js/shared/flowEditor"
     }
 });
 
