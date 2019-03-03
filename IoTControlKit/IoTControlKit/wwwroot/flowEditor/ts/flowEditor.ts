@@ -30,6 +30,7 @@ export class flowEditor extends ElementWrapper{
     localStorage: LocalStorageWorker = new LocalStorageWorker()
     paper: any
     graph: any
+    uniqueId: number = -1
 
     flows: models.Flow[]
     flowComponents: models.FlowComponent[]
@@ -156,65 +157,6 @@ export class flowEditor extends ElementWrapper{
         }
         self.onResize(self)
 
-        joint.shapes.devs.Model = joint.shapes.basic.Generic.extend(_.extend({}, joint.shapes.basic.PortsModelInterface, {
-
-            markup: '<g class="rotatable"><g class="scalable"><rect class="body"/></g><text class="label"/><g class="inPorts"/><g class="outPorts"/></g>',
-            portMarkup: '<g class="port port<%= id %>"><circle class="port-body"/><text class="port-label"/></g>',
-
-            defaults: joint.util.deepSupplement({
-
-                type: 'devs.Model',
-                size: { width: 1, height: 1 },
-
-                inPorts: [],
-                outPorts: [],
-
-                attrs: {
-                    '.': { magnet: false },
-                    '.body': {
-                        width: 150, height: 250,
-                        stroke: 'black'
-                    },
-                    '.port-body': {
-                        r: 10,
-                        magnet: true,
-                        stroke: 'black'
-                    },
-                    text: {
-                        fill: 'black',
-                        'pointer-events': 'none'
-                    },
-                    '.label': { text: 'Model', 'ref-x': 10, 'ref-y': .2, 'ref': '.body' },
-
-                    // CHANGED: find better positions for port labels
-                    '.inPorts .port-label': { y: -20, dx: 4 },
-                    '.outPorts .port-label': { y: 25, dx: 4 }
-                    //
-                }
-
-            }, joint.shapes.basic.Generic.prototype.defaults),
-
-            getPortAttrs: function (portName, index, total, selector, type) {
-                var attrs = {};
-
-                var portClass = 'port' + index;
-                var portSelector = selector + '>.' + portClass;
-                var portLabelSelector = portSelector + '>.port-label';
-                var portBodySelector = portSelector + '>.port-body';
-
-                attrs[portLabelSelector] = { text: portName };
-                attrs[portBodySelector] = { port: { id: portName || _.uniqueId(type), type: type } };
-
-                // CHANGED: swap x and y ports coordinates ('ref-y' => 'ref-x')
-                attrs[portSelector] = { ref: '.body', 'ref-x': (index + 0.5) * (1 / total) };
-                // ('ref-dx' => 'ref-dy')
-                if (selector === '.outPorts') { attrs[portSelector]['ref-dy'] = 0; }
-                //
-
-                return attrs;
-            }
-        }));
-
         self.graph = new joint.dia.Graph;
         self.paper = new joint.dia.Paper({
             el: $('#paper'),
@@ -225,11 +167,11 @@ export class flowEditor extends ElementWrapper{
             }),
             validateConnection: function (cellViewS, magnetS, cellViewT, magnetT, end, linkView) {
                 // Prevent linking from input ports.
-                if (magnetS && magnetS.getAttribute('type') === 'input') return false;
+                if (magnetS && magnetS.getAttribute('port-group') === 'in') return false;
                 // Prevent linking from output ports to input ports within one element.
                 if (cellViewS === cellViewT) return false;
                 // Prevent linking to input ports.
-                return magnetT && magnetT.getAttribute('type') === 'input';
+                return magnetT && magnetT.getAttribute('port-group') === 'in';
             },
             // Enable marking available cells & magnets
             markAvailable: true//,
@@ -243,6 +185,11 @@ export class flowEditor extends ElementWrapper{
         else {
             self.setActiveFlow(self, self.flows[0])
         }
+    }
+
+    getUniqueId(self: flowEditor) {
+        self.uniqueId--
+        return self.uniqueId
     }
 
     createNewFlow(self: flowEditor) {
@@ -259,12 +206,111 @@ export class flowEditor extends ElementWrapper{
         }
         self.activeFlow = flow
         _.forEach(self.flowComponents, function (item: models.FlowComponent) {
-            if (item.Guid == self.activeFlow.Guid) {
+            if (item.FlowId == self.activeFlow.Id) {
                 //todo
             }
         })
     }
 
+    drawComponent(self: flowEditor, item: models.FlowComponent) {
+        let deviceProperty: models.DevicePropertyViewModel = _.find(self.deviceProperties, function (o: models.DevicePropertyViewModel) { return o.Id == item.DevicePropertyId })
+        let pos = { x: item.PositionX, y: item.PositionY }
+        let size = { width: 200, height: 90 }
+        let inPorts = []
+        let outputOrientation: number = 0
+        let outPorts = []
+        let infoText = ''
+
+        if (item.Type == "Trigger") {
+        }
+        else if (item.Type == "Condition") {
+            inPorts = ['in']
+        }
+        else if (item.Type == "Action") {
+            inPorts = ['in']
+        }
+        else if (item.Type == "PassThrough") {
+            inPorts = ['In']
+            infoText = "Pass Through"
+        }
+
+        if (item.Type == "PassThrough") {
+            outPorts = ['']
+        }
+        else if (deviceProperty.DataType == 'enum') {
+            outputOrientation = 90
+            outPorts = deviceProperty.Format.split(",")
+        }
+        else if (deviceProperty.DataType == 'boolean') {
+            outPorts = ['true', 'false']
+        }
+        else {
+            outPorts = ['<', '<=', '=', '=>', '>']
+        }
+
+        
+        if (deviceProperty != null) {
+            infoText = deviceProperty.Name
+        }
+
+        let label = {
+            text: joint.util.breakText(infoText, {
+                width: 200,
+                height: 90
+            }), 'ref-x': .5, 'ref-y': .2 }
+        let m = new joint.shapes.devs.Model({
+            position: pos,
+            size: size,
+            inPorts: inPorts,
+            outPorts: outPorts,
+            ports: {
+                groups: {
+                    'in': {
+                        position: "top",
+                        attrs: {
+                            '.port-body': {
+                                fill: '#16A085',
+                                magnet: 'passive'
+                            }
+                        },
+                        label: {
+                            // label layout definition:
+                            position: {
+                                name: 'manual', args: {
+                                    y: -20,
+                                    attrs: { '.': { 'text-anchor': 'middle' } }
+                                }
+                            }
+                        }
+                    },
+                    'out': {
+                        position: "bottom",
+                        attrs: {
+                            '.port-body': {
+                                fill: '#E74C3C'
+                            }
+                        },
+                        label: {
+                            // label layout definition:
+                            position: {
+                                name: 'manual', args: {
+                                    y: 25,
+                                    angle: outputOrientation,
+                                    attrs: { '.': { 'text-anchor': 'middle' } }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            attrs: {
+                '.label': label,
+                rect: { fill: '#CBE2F5' },
+                text: { 'font-size': 12 }
+            }
+        });
+        m.addTo(self.graph)
+    }
 
     onToolboxItemDragStart(self: flowEditor, event: DragEvent, toolBoxItem: string) {
         event.stopPropagation()
@@ -284,24 +330,60 @@ export class flowEditor extends ElementWrapper{
         if (data == 'trigger') {
             let dlg = new dialogs.SelectDevicePropertyDialog()
             dlg.show_(dlg, self.deviceProperties, null, function (item) {
+                let component = new models.FlowComponent()
+                component.DevicePropertyId = item.Id
+                component.Id = self.getUniqueId(self)
+                component.Guid = uuidv4()
+                component.PositionX = 50
+                component.PositionY = 50
+                component.FlowId = self.activeFlow.Id
+                component.Type = 'Trigger'
+                self.flowComponents.push(component)
+                self.drawComponent(self, component)
             })
         }
         else if (data == 'condition') {
             let dlg = new dialogs.SelectDevicePropertyDialog()
             dlg.show_(dlg, self.deviceProperties, null, function (item) {
+                let component = new models.FlowComponent()
+                component.DevicePropertyId = item.Id
+                component.Id = self.getUniqueId(self)
+                component.Guid = uuidv4()
+                component.PositionX = 50
+                component.PositionY = 50
+                component.FlowId = self.activeFlow.Id
+                component.Type = 'Condition'
+                self.flowComponents.push(component)
+                self.drawComponent(self, component)
             })
         }
         else if (data == 'action') {
             let dlg = new dialogs.SelectDevicePropertyDialog()
             let subset = _.filter(self.deviceProperties, function (item) { return item.Settable })
-            dlg.show_(dlg, subset, function (item) {
-                return item.Settable == true
-            }
-            , function (item) {
+            dlg.show_(dlg, self.deviceProperties, null, function (item) {
+                let component = new models.FlowComponent()
+                component.DevicePropertyId = item.Id
+                component.Id = self.getUniqueId(self)
+                component.Guid = uuidv4()
+                component.PositionX = 50
+                component.PositionY = 50
+                component.FlowId = self.activeFlow.Id
+                component.Type = 'Action'
+                self.flowComponents.push(component)
+                self.drawComponent(self, component)
             })
         }
         else if (data == 'passthrough') {
-
+            let component = new models.FlowComponent()
+            component.DevicePropertyId = null
+            component.Id = self.getUniqueId(self)
+            component.Guid = uuidv4()
+            component.PositionX = 50
+            component.PositionY = 50
+            component.FlowId = self.activeFlow.Id
+            component.Type = 'PassThrough'
+            self.flowComponents.push(component)
+            self.drawComponent(self, component)
         }
     }
 

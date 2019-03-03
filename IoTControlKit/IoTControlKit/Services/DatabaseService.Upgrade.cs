@@ -113,7 +113,7 @@ Id integer PRIMARY KEY,
 FlowId integer not null REFERENCES Flow (Id),
 Guid nvarchar(255) not null,
 Type nvarchar(255) not null,
-DevicePropertyId integer not null REFERENCES DeviceProperty (Id),
+DevicePropertyId integer REFERENCES DeviceProperty (Id),
 Value nvarchar(255) not null,
 PositionX integer not null,
 PositionY integer not null
