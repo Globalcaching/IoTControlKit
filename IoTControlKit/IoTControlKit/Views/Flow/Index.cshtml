@@ -1,4 +1,5 @@
-﻿@{
+﻿@model IoTControlKit.ViewModels.BaseViewModel
+@{
     ViewData["Title"] = "Flow Editor";
 }
 
@@ -7,11 +8,12 @@
 <script>
 
     var flowEditorObj;
+    var allFlowData = @Html.Raw(Json.Serialize(Model.ResultData));
 
     $(function () {
         require(["flowEditor"],
             function (flowEditor) {
-                flowEditorObj = flowEditor.createFlowEditor('#flowEditor');
+                flowEditorObj = flowEditor.createFlowEditor('#flowEditor', allFlowData);
             });
     });
 </script>

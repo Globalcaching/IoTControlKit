@@ -9,6 +9,7 @@ namespace IoTControlKit.Models.Application
     public class Flow: BasePoco
     {
         public string Name { get; set; }
+        public string Guid { get; set; }
         public bool Enabled { get; set; }
     }
 }

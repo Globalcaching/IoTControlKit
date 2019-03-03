@@ -48,3 +48,20 @@
         overflow-y: auto;
         /*background-color: blue; */
     }
+
+/* port styling */
+.available-magnet {
+    fill: yellow;
+}
+
+/* element styling */
+.available-cell rect {
+    stroke-dasharray: 5, 2;
+}
+
+.paper {
+    border: 1px solid lightgray;
+    display: inline-block;
+    overflow: hidden;
+}
+

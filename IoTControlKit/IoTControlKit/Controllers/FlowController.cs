@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using IoTControlKit.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,9 @@ namespace IoTControlKit.Controllers
 
         public ActionResult Index()
         {
-            return View(Services.BaseService.CompleteViewModel(null));
+            var m = Services.BaseService.CompleteViewModel(null);
+            m.ResultData = ApplicationService.Instance.GetFlowViewModel();
+            return View(m);
         }
 
     }

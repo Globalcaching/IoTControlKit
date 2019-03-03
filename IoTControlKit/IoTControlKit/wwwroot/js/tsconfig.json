@@ -8,13 +8,13 @@
     "sourceMap": true,
     "target": "es5",
     "lib": [ "es5", "dom", "es2015" ],
-    "allowJs": true,
-    "baseUrl": "/js"
+    "allowJs": true
   },
   "files": [
     "./typings/lodash.d.ts",
     "./typings/jquery.d.ts",
-    "./shared/pagedList.ts"
+    "./shared/pagedList.ts",
+    "../flowEditor/ts/flowEditor.ts"
   ],
   "compileOnSave": true
 }

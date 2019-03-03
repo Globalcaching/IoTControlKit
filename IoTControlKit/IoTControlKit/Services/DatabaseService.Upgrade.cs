@@ -103,16 +103,20 @@ LastSetValueAt datetime
                         case 1:
                             db.Execute(@"create table if not exists Flow(
 Id integer PRIMARY KEY,
+Guid nvarchar(255) not null,
 Name nvarchar(255) not null,
 Enabled bit not null
 )");
 
                             db.Execute(@"create table if not exists FlowComponent(
 Id integer PRIMARY KEY,
+FlowId integer not null REFERENCES Flow (Id),
 Guid nvarchar(255) not null,
 Type nvarchar(255) not null,
-DevicePropertyId integer not null,
-Value nvarchar(255) not null
+DevicePropertyId integer not null REFERENCES DeviceProperty (Id),
+Value nvarchar(255) not null,
+PositionX integer not null,
+PositionY integer not null
 )");
 
                             db.Execute(@"create table if not exists FlowConnector(
