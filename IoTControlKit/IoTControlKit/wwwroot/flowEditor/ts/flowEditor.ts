@@ -27,10 +27,12 @@ export class flowEditor extends ElementWrapper{
     splitterRight: ElementWrapper
     toolBox: ElementWrapper
     canvas: ElementWrapper
+    properties: ElementWrapper
     localStorage: LocalStorageWorker = new LocalStorageWorker()
     paper: any
     graph: any
     uniqueId: number = -1
+    activeCellView: any = null
 
     flows: models.Flow[]
     flowComponents: models.FlowComponent[]
@@ -116,6 +118,18 @@ export class flowEditor extends ElementWrapper{
         };
         self.toolBox.append(tbItem)
 
+        self.properties = E('div')
+        let btn = E('button')
+        btn.attr('class', 'btn btn-primary col-md-12')
+        btn.innerText('Delete');
+        (btn.element as HTMLButtonElement).onclick = function () {
+            if (self.activeCellView != null) {
+                self.deleteComponent(self, self.activeCellView)
+            }
+        }
+        self.properties.append(btn)
+        self.right.append(self.properties)
+
         self.canvas = E('div').attr('id', 'paper');
         (self.canvas.element as HTMLDivElement).ondragover = function (ev: DragEvent) {
             self.onPaperOnDragOver(ev)
@@ -178,12 +192,78 @@ export class flowEditor extends ElementWrapper{
             //snapLinks: { radius: 75 }
         });
 
+        self.paper.on('cell:pointerclick', function (cellView, evt, x, y) {
+            self.setActiveCellView(self, cellView);
+        })
+        self.paper.on('blank:pointerclick', function (evt, x, y) {
+            self.setActiveCellView(self, null);
+        })
+        self.paper.on('link:connect', function (connection, z, c, v, b) {
+            let newCon = new models.FlowConnector()
+            newCon.Guid = uuidv4()
+            newCon.Id = self.getUniqueId(self)
+            newCon.SourceFlowComponentd = connection.sourceView.model.attr('flowComponentId')
+            newCon.TargetFlowComponentd = connection.targetView.model.attr('flowComponentId')
+            newCon.SourcePort = connection.sourceMagnet.getAttribute('port')
+            self.flowConnectors.push(newCon)
+        })
+        self.graph.on('remove', function (cell) {
+            if (cell.isLink()) {
+
+            }
+        })
+        self.graph.on('change:position', function (cell) {
+            if (!cell.isLink()) {
+                let x = cell.changed.position.x
+                let y = cell.changed.position.y
+                let componentId = cell.attributes.attrs.flowComponentId
+                let flowComponent = _.find(self.flowComponents, function (o) { return o.Id == componentId })
+                flowComponent.PositionX = x
+                flowComponent.PositionY = y
+            } 
+        })
 
         if (self.flows.length == 0) {
             self.createNewFlow(self)
         }
         else {
             self.setActiveFlow(self, self.flows[0])
+        }
+
+        self.setActiveCellView(self, null)
+    }
+
+    deleteComponent(self: flowEditor, activeCell) {
+        if (activeCell == self.activeCellView) {
+            self.setActiveCellView(self, null)
+        }
+        let componentId = activeCell.model.attr('flowComponentId')
+        _.remove(self.flowConnectors, function (o: models.FlowConnector) { return o.SourceFlowComponentd == componentId || o.TargetFlowComponentd == componentId })
+        _.remove(self.flowComponents, function (o: models.FlowComponent) { return o.Id == componentId })
+
+        let links = self.graph.getConnectedLinks(activeCell.model);
+        for (var k = 0; k < links.length; k++) {
+            links[k].remove();
+        }
+        activeCell.model.remove();
+    }
+
+    setActiveCellView(self: flowEditor, activeCell) {
+        if (self.activeCellView != null) {
+            self.activeCellView.unhighlight();
+            self.activeCellView = null;
+        }
+        self.activeCellView = activeCell;
+        if (self.activeCellView != null) {
+            let componentId = activeCell.model.attr('flowComponentId')
+            let flowComponent = _.find(self.flowComponents, function (o) { return o.Id == componentId })
+            let deviceProperty: models.DevicePropertyViewModel = _.find(self.deviceProperties, function (o: models.DevicePropertyViewModel) { return o.Id == flowComponent.DevicePropertyId })
+
+            self.activeCellView.highlight();
+            $(self.properties.element).show()
+        }
+        else {
+            $(self.properties.element).hide()
         }
     }
 
@@ -194,7 +274,9 @@ export class flowEditor extends ElementWrapper{
 
     createNewFlow(self: flowEditor) {
         let newFlow = new models.Flow()
+        newFlow.Id = self.getUniqueId(self)
         newFlow.Guid = uuidv4()
+        newFlow.Name = 'New flow';
         self.flows.push(newFlow)
         self.setActiveFlow(self, newFlow)
     }
@@ -212,6 +294,28 @@ export class flowEditor extends ElementWrapper{
         })
     }
 
+    getInfoTextFromProperty(self: flowEditor, item: models.FlowComponent, deviceProperty: models.DevicePropertyViewModel) {
+        let infoText = ''
+        if (deviceProperty != null) {
+            infoText = 'Controller: ' + deviceProperty.ControllerName + '\n';
+            infoText += 'Device: ' + deviceProperty.DeviceName + '\n';
+            infoText += 'Property: ';
+            if (deviceProperty.Name.startsWith(deviceProperty.DeviceName)) {
+                infoText += deviceProperty.Name.substr(deviceProperty.DeviceName.length)
+            }
+            else {
+                infoText += deviceProperty.Name
+            }
+            if (deviceProperty.DataType == 'float') {
+                infoText += '\nValue (' + deviceProperty.Format + '): ' + item.Value;
+            }
+        }
+        else if (item.Type == "PassThrough") {
+            infoText = "Pass Through"
+        }
+        return infoText
+    }
+
     drawComponent(self: flowEditor, item: models.FlowComponent) {
         let deviceProperty: models.DevicePropertyViewModel = _.find(self.deviceProperties, function (o: models.DevicePropertyViewModel) { return o.Id == item.DevicePropertyId })
         let pos = { x: item.PositionX, y: item.PositionY }
@@ -219,7 +323,6 @@ export class flowEditor extends ElementWrapper{
         let inPorts = []
         let outputOrientation: number = 0
         let outPorts = []
-        let infoText = ''
 
         if (item.Type == "Trigger") {
         }
@@ -231,11 +334,12 @@ export class flowEditor extends ElementWrapper{
         }
         else if (item.Type == "PassThrough") {
             inPorts = ['In']
-            infoText = "Pass Through"
         }
 
-        if (item.Type == "PassThrough") {
-            outPorts = ['']
+        if (item.Type == "Action") {
+        }
+        else if (item.Type == "PassThrough") {
+            outPorts = ['Out']
         }
         else if (deviceProperty.DataType == 'enum') {
             outputOrientation = 90
@@ -248,13 +352,8 @@ export class flowEditor extends ElementWrapper{
             outPorts = ['<', '<=', '=', '=>', '>']
         }
 
-        
-        if (deviceProperty != null) {
-            infoText = deviceProperty.Name
-        }
-
         let label = {
-            text: joint.util.breakText(infoText, {
+            text: joint.util.breakText(self.getInfoTextFromProperty(self, item, deviceProperty), {
                 width: 200,
                 height: 90
             }), 'ref-x': .5, 'ref-y': .2 }
@@ -304,6 +403,7 @@ export class flowEditor extends ElementWrapper{
                 }
             },
             attrs: {
+                flowComponentId: item.Id,
                 '.label': label,
                 rect: { fill: '#CBE2F5' },
                 text: { 'font-size': 12 }
@@ -327,63 +427,48 @@ export class flowEditor extends ElementWrapper{
         let self = this
         event.preventDefault();
         var data = event.dataTransfer.getData("text");
+        let mouseX = _mouseClientX
+        let mouseY = _mouseClientY
+        let addComponentFunc = function (item: models.DevicePropertyViewModel, compType: string) {
+            let component = new models.FlowComponent()
+            if (item != null) {
+                component.DevicePropertyId = item.Id
+            }
+            else {
+                component.DevicePropertyId = null
+            }
+            component.Id = self.getUniqueId(self)
+            component.Guid = uuidv4()
+            let canvasRect = (self.canvas.element as HTMLElement).getBoundingClientRect()
+            component.PositionX = mouseX - canvasRect.left
+            component.PositionY = mouseY - canvasRect.top
+            component.FlowId = self.activeFlow.Id
+            component.Type = compType
+            self.flowComponents.push(component)
+            self.drawComponent(self, component)
+        }
+
         if (data == 'trigger') {
             let dlg = new dialogs.SelectDevicePropertyDialog()
             dlg.show_(dlg, self.deviceProperties, null, function (item) {
-                let component = new models.FlowComponent()
-                component.DevicePropertyId = item.Id
-                component.Id = self.getUniqueId(self)
-                component.Guid = uuidv4()
-                component.PositionX = 50
-                component.PositionY = 50
-                component.FlowId = self.activeFlow.Id
-                component.Type = 'Trigger'
-                self.flowComponents.push(component)
-                self.drawComponent(self, component)
+                addComponentFunc(item, 'Trigger')
             })
         }
         else if (data == 'condition') {
             let dlg = new dialogs.SelectDevicePropertyDialog()
             dlg.show_(dlg, self.deviceProperties, null, function (item) {
-                let component = new models.FlowComponent()
-                component.DevicePropertyId = item.Id
-                component.Id = self.getUniqueId(self)
-                component.Guid = uuidv4()
-                component.PositionX = 50
-                component.PositionY = 50
-                component.FlowId = self.activeFlow.Id
-                component.Type = 'Condition'
-                self.flowComponents.push(component)
-                self.drawComponent(self, component)
+                addComponentFunc(item, 'Condition')
             })
         }
         else if (data == 'action') {
             let dlg = new dialogs.SelectDevicePropertyDialog()
             let subset = _.filter(self.deviceProperties, function (item) { return item.Settable })
             dlg.show_(dlg, self.deviceProperties, null, function (item) {
-                let component = new models.FlowComponent()
-                component.DevicePropertyId = item.Id
-                component.Id = self.getUniqueId(self)
-                component.Guid = uuidv4()
-                component.PositionX = 50
-                component.PositionY = 50
-                component.FlowId = self.activeFlow.Id
-                component.Type = 'Action'
-                self.flowComponents.push(component)
-                self.drawComponent(self, component)
+                addComponentFunc(item, 'Action')
             })
         }
         else if (data == 'passthrough') {
-            let component = new models.FlowComponent()
-            component.DevicePropertyId = null
-            component.Id = self.getUniqueId(self)
-            component.Guid = uuidv4()
-            component.PositionX = 50
-            component.PositionY = 50
-            component.FlowId = self.activeFlow.Id
-            component.Type = 'PassThrough'
-            self.flowComponents.push(component)
-            self.drawComponent(self, component)
+            addComponentFunc(null, 'PassThrough')
         }
     }
 
