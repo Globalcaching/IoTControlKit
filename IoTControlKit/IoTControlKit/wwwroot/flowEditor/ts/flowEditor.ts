@@ -28,11 +28,13 @@ export class flowEditor extends ElementWrapper{
     toolBox: ElementWrapper
     canvas: ElementWrapper
     properties: ElementWrapper
+    valueInput: ElementWrapper
     localStorage: LocalStorageWorker = new LocalStorageWorker()
     paper: any
     graph: any
     uniqueId: number = -1
     activeCellView: any = null
+    ignoreInputChange: boolean = false
 
     flows: models.Flow[]
     flowComponents: models.FlowComponent[]
@@ -128,7 +130,25 @@ export class flowEditor extends ElementWrapper{
             }
         }
         self.properties.append(btn)
-        self.right.append(self.properties)
+        let div = E('div')
+        self.properties.append(div)
+        let div2 = E('div')
+        div2.attr('class', 'col-md-12')
+        div2.innerText('Value')
+        div.append(div2)
+        div2 = E('div')
+        div2.attr('class', 'col-md-12')
+        div.append(div2)
+        self.valueInput = E('input')
+        self.valueInput.attr('style','width:100%;')
+        div2.append(self.valueInput)
+        self.right.append(self.properties);
+
+        (self.valueInput.element as HTMLInputElement).oninput = function () {
+            if (!self.ignoreInputChange) {
+                self.setActiveCellViewValue(self, $(self.valueInput.element).val())
+            }
+        }
 
         self.canvas = E('div').attr('id', 'paper');
         (self.canvas.element as HTMLDivElement).ondragover = function (ev: DragEvent) {
@@ -188,9 +208,15 @@ export class flowEditor extends ElementWrapper{
                 return magnetT && magnetT.getAttribute('port-group') === 'in';
             },
             // Enable marking available cells & magnets
-            markAvailable: true//,
+            markAvailable: true,
             //snapLinks: { radius: 75 }
-        });
+            defaultRouter: {
+                name: 'metro',
+                args: {
+                    padding: 10
+                }
+            }
+        })
 
         self.paper.on('cell:pointerclick', function (cellView, evt, x, y) {
             self.setActiveCellView(self, cellView);
@@ -205,11 +231,13 @@ export class flowEditor extends ElementWrapper{
             newCon.SourceFlowComponentd = connection.sourceView.model.attr('flowComponentId')
             newCon.TargetFlowComponentd = connection.targetView.model.attr('flowComponentId')
             newCon.SourcePort = connection.sourceMagnet.getAttribute('port')
+            connection.model.attr('flowConnectorId', newCon.Id.toString())
             self.flowConnectors.push(newCon)
         })
         self.graph.on('remove', function (cell) {
             if (cell.isLink()) {
-
+                let connectorId = cell.attributes.attrs.flowConnectorId
+                _.remove(self.flowConnectors, function (o: models.FlowConnector) { return o.Id == connectorId })
             }
         })
         self.graph.on('change:position', function (cell) {
@@ -248,7 +276,21 @@ export class flowEditor extends ElementWrapper{
         activeCell.model.remove();
     }
 
+    setActiveCellViewValue(self: flowEditor, v: string) {
+        if (self.activeCellView != null) {
+            let componentId = self.activeCellView.model.attr('flowComponentId')
+            let flowComponent = _.find(self.flowComponents, function (o) { return o.Id == componentId })
+            flowComponent.Value = v
+            let deviceProperty: models.DevicePropertyViewModel = null
+            if (flowComponent.DevicePropertyId != null) {
+                deviceProperty = _.find(self.deviceProperties, function (o: models.DevicePropertyViewModel) { return o.Id == flowComponent.DevicePropertyId })
+            }
+            self.activeCellView.model.attr('.label/text', self.getInfoTextFromProperty(self, flowComponent, deviceProperty))
+        }
+    }
+
     setActiveCellView(self: flowEditor, activeCell) {
+        self.ignoreInputChange = true
         if (self.activeCellView != null) {
             self.activeCellView.unhighlight();
             self.activeCellView = null;
@@ -257,7 +299,28 @@ export class flowEditor extends ElementWrapper{
         if (self.activeCellView != null) {
             let componentId = activeCell.model.attr('flowComponentId')
             let flowComponent = _.find(self.flowComponents, function (o) { return o.Id == componentId })
-            let deviceProperty: models.DevicePropertyViewModel = _.find(self.deviceProperties, function (o: models.DevicePropertyViewModel) { return o.Id == flowComponent.DevicePropertyId })
+            let deviceProperty: models.DevicePropertyViewModel = null
+            if (flowComponent.DevicePropertyId != null) {
+                deviceProperty = _.find(self.deviceProperties, function (o: models.DevicePropertyViewModel) { return o.Id == flowComponent.DevicePropertyId })
+            }
+            if (deviceProperty == null) {
+                $(self.valueInput.element).hide()
+            }
+            else {
+                switch (deviceProperty.DataType) {
+                    case 'color':
+                        //todo
+                        break
+                    case 'enum':
+                        //todo
+                        break
+                    default:
+                        self.valueInput.attr('type','text')
+                        $(self.valueInput.element).show()
+                        $(self.valueInput.element).val(flowComponent.Value)
+                        break
+                }
+            }
 
             self.activeCellView.highlight();
             $(self.properties.element).show()
@@ -265,6 +328,7 @@ export class flowEditor extends ElementWrapper{
         else {
             $(self.properties.element).hide()
         }
+        self.ignoreInputChange = false
     }
 
     getUniqueId(self: flowEditor) {
