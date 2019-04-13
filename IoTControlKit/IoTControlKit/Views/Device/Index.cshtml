@@ -36,72 +36,24 @@
     </div>
 </div>
 
-<div class="modal fade" id="dialog-editMQTTProperty" tabindex="-1" role="dialog" aria-labelledby="editMQTTPropertyLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title" id="editMQTTPropertyLabel">@Html.T("Edit MQTT Property")</h4>
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">@Html.T("Close")</span></button>
-            </div>
-            <div class="modal-body">
-                <form role="form" class="form-horizontal">
-                    <div class="form-group">
-                        <label for="Name" class="col-sm-3 control-label">
-                            @Html.T("Name"):
-                        </label>
-                        <div class="col-sm-9">
-                            <input class="form-control" name="Name" id="Name" data-bind='textInput: Name' />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="TcpServer" class="col-sm-3 control-label">
-                            @Html.T("TcpServer"):
-                        </label>
-                        <div class="col-sm-9">
-                            <input class="form-control" name="TcpServer" id="TcpServer" data-bind='textInput: TcpServer' />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="BaseTopic" class="col-sm-3 control-label">
-                            @Html.T("BaseTopic"):
-                        </label>
-                        <div class="col-sm-9">
-                            <input class="form-control" name="BaseTopic" id="BaseTopic" data-bind='textInput: BaseTopic' />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="MQTTType" class="col-sm-3 control-label">
-                            @Html.T("Type"):
-                        </label>
-                        <div class="col-sm-9">
-                            <select class="form-control" name="MQTTType" id="MQTTType" data-bind="options: availableMQTTTypes, value: MQTTType"></select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-check-label col-sm-9 ml-sm-3">
-                            <input class="form-check-input" type="checkbox" name="Enabled" id="Enabled" data-bind='checked: Enabled'> @Html.T("Enabled")
-                        </label>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="saveMQTTProperty()">@Html.T("Apply")</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">@Html.T("Cancel")</button>
-            </div>
-        </div>
-    </div>
-</div>
+@foreach (var plugin in IoTControlKit.Services.ApplicationService.Instance.Plugins)
+{
+    @Html.Raw(Html.PluginFile(plugin, "Device", "Index.html"))
+}
+
 
 <script>
     var viewModel = {};
     viewModel.DevicePropertyValue = ko.observable('').extend({ required: "" });
     viewModel.InternalOnly = ko.observable(false);
     viewModel.Name = ko.observable('').extend({ required: "" });
-    viewModel.BaseTopic = ko.observable('').extend({ required: "" });
     viewModel.Enabled = ko.observable(true);
-    viewModel.MQTTType = ko.observable('');
-    viewModel.TcpServer = ko.observable('').extend({ required: "" });
-    viewModel.availableMQTTTypes = ko.observableArray(['homie']);
+
+@foreach (var plugin in IoTControlKit.Services.ApplicationService.Instance.Plugins)
+{
+    @Html.Raw(Html.PluginFile(plugin, "Device", "Index.js"))
+}
+
     ko.applyBindings(viewModel);
 
     var selectedItem;
@@ -114,27 +66,6 @@
 
     function saveDeviceProperty() {
         $.post('@Url.Action("ChangeDevicePropertyValue", "Device")', { id: selectedItem.Id, value: viewModel.DevicePropertyValue(), internalOnly: viewModel.InternalOnly()});
-    }
-
-    function editMQTTProperty(item) {
-        $.post('@Url.Action("GetMQTT", "Device")', { id: item.MQTTClientId }, function (result) {
-            selectedItem = result;
-            viewModel.Name(selectedItem.Name);
-            viewModel.BaseTopic(selectedItem.BaseTopic);
-            viewModel.Enabled(selectedItem.Enabled);
-            viewModel.MQTTType(selectedItem.MQTTType);
-            viewModel.TcpServer(selectedItem.TcpServer);
-            $('#dialog-editMQTTProperty').appendTo('body').modal();
-        });
-    }
-
-    function saveMQTTProperty() {
-        selectedItem.Name = viewModel.Name();
-        selectedItem.BaseTopic = viewModel.BaseTopic();
-        selectedItem.Enabled = viewModel.Enabled();
-        selectedItem.MQTTType = viewModel.MQTTType();
-        selectedItem.TcpServer = viewModel.TcpServer();
-        $.post('@Url.Action("SaveMQTT", "Device")', { item: selectedItem });
     }
 
     function getDevicePropertiesList(device) {
@@ -206,14 +137,8 @@
                 });
             pagedList.addColumn("Name", "@Html.T("Name")")
                 .itemToHtml(function (item) { return htmlEncode(item.Name); });
-            pagedList.addColumn("Type", "@Html.T("Type")")
-                .itemToHtml(function (item)
-                {
-                    if (item.MQTTClientId != null) {
-                        return '@Html.T("MQTT Client")';
-                    }
-                    return '@Html.T("Unknown")';
-                });
+            pagedList.addColumn("Plugin", "@Html.T("Plugin")")
+                .itemToHtml(function (item) { return htmlEncode(item.Plugin); });
             pagedList.addColumn("State", "@Html.T("State")")
                 .itemToHtml(function (item) { return htmlEncode(item.State); });
             pagedList.addColumn("Ready", "@Html.T("Ready")")

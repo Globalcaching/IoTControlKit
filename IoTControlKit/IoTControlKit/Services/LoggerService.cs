@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace IoTControlKit.Services
 {
-    public class LoggerService : BaseService
+    public class LoggerService : BaseService, Framework.ILogger
     {
         //matching view!
         public class LogLine

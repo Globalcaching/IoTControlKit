@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace IoTControlKit.Models.Application
+namespace IoTControlKit.Framework.Models
 {
     [NPoco.TableName("FlowComponent")]
     public class FlowComponent: BasePoco
     {
         public long FlowId { get; set; }
-        public string Guid { get; set; }
         public string Type { get; set; } //Trigger, Condition, Action, PassThrough
         public long? DevicePropertyId { get; set; }
         public string Value { get; set; }

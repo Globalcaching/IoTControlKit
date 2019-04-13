@@ -1,6 +1,5 @@
 ﻿export class Flow {
     Id: number
-    Guid: string
     Name: string
     Enabled: boolean
 }
@@ -8,7 +7,6 @@
 export class FlowComponent {
     Id: number
     FlowId: number
-    Guid: string
     Type: string
     DevicePropertyId: number
     Value: string
@@ -18,7 +16,6 @@ export class FlowComponent {
 
 export class FlowConnector {
     Id: number
-    Guid: string
     TargetFlowComponentd: number
     SourceFlowComponentd: number
     SourcePort: string  //true, false, <, <=, = etc.

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace IoTControlKit.Models.Application
+namespace IoTControlKit.Framework.Models
 {
     [NPoco.PrimaryKey("Id")]
     public class BasePoco

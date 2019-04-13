@@ -9,7 +9,7 @@ namespace IoTControlKit.Services
 {
     public partial class DatabaseService : BaseService
     {
-        private const long _targetDatabaseVersion = 2;
+        private const long _targetDatabaseVersion = 1;
 
         private Services.Database.BaseDatabaseService GetNewDatabaseInstance()
         {
@@ -22,7 +22,6 @@ namespace IoTControlKit.Services
             {
                 var version = db.ExecuteScalar<long>("PRAGMA user_version");
                 UpgradeDatabase(db, version);
-                InitDatabaseContent(db);
             });
 
             return result;
@@ -49,22 +48,14 @@ namespace IoTControlKit.Services
                     {
                         case 0: //initial clean version
 
-                            db.Execute(@"create table if not exists MQTTClient(
-Id integer PRIMARY KEY,
-Name nvarchar(255) not null UNIQUE,
-BaseTopic nvarchar(255) not null,
-Enabled bit not null,
-MQTTType nvarchar(255) not null,
-TcpServer nvarchar(255) not null UNIQUE
-)");
-
                             db.Execute(@"create table if not exists DeviceController(
 Id integer PRIMARY KEY,
-MQTTClientId integer REFERENCES MQTTClient (Id),
+Plugin nvarchar(255) not null,
 NormalizedName nvarchar(255),
 Name nvarchar(255),
 State nvarchar(255),
-Ready bit not null
+Ready bit not null,
+Enabled bit not null
 )");
 
                             db.Execute(@"create table if not exists Device(
@@ -98,12 +89,8 @@ LastReceivedValueAt datetime,
 LastSetValueAt datetime
 )");
 
-                            newVersion = 1;
-                            break;
-                        case 1:
                             db.Execute(@"create table if not exists Flow(
 Id integer PRIMARY KEY,
-Guid nvarchar(255) not null,
 Name nvarchar(255) not null,
 Enabled bit not null
 )");
@@ -111,7 +98,6 @@ Enabled bit not null
                             db.Execute(@"create table if not exists FlowComponent(
 Id integer PRIMARY KEY,
 FlowId integer not null REFERENCES Flow (Id),
-Guid nvarchar(255) not null,
 Type nvarchar(255) not null,
 DevicePropertyId integer REFERENCES DeviceProperty (Id),
 Value nvarchar(255) not null,
@@ -121,13 +107,11 @@ PositionY integer not null
 
                             db.Execute(@"create table if not exists FlowConnector(
 Id integer PRIMARY KEY,
-Guid nvarchar(255) not null,
 TargetFlowComponentd integer not null REFERENCES FlowComponent (Id),
 SourceFlowComponentd integer not null REFERENCES FlowComponent (Id),
 SourcePort nvarchar(255) not null
 )");
-
-                            newVersion = 2;
+                            newVersion = 1;
                             break;
                     }
                     if (fromVersion != newVersion)
@@ -139,11 +123,6 @@ SourcePort nvarchar(255) not null
                 while (newVersion != _targetDatabaseVersion);
                 return true;
             }
-        }
-
-        private void InitDatabaseContent(NPoco.Database db)
-        {
-            db.Execute("insert or ignore into MQTTClient (Name, BaseTopic, Enabled, MQTTType, TcpServer) values ('Local', 'Homey/homie/#',  1, 'homie', 'localhost')");
         }
     }
 }

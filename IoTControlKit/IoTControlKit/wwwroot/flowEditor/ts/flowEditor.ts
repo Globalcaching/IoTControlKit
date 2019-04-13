@@ -29,6 +29,11 @@ export class flowEditor extends ElementWrapper{
     canvas: ElementWrapper
     properties: ElementWrapper
     valueInput: ElementWrapper
+    controls: ElementWrapper
+    flowSelector: ElementWrapper
+    flowSelectorButton: ElementWrapper
+    flowSelectorDiv: ElementWrapper
+    flowName: ElementWrapper
     localStorage: LocalStorageWorker = new LocalStorageWorker()
     paper: any
     graph: any
@@ -63,6 +68,21 @@ export class flowEditor extends ElementWrapper{
         else {
             self.containerId = (container.id != '') ? container.id : 'Unknown id';
         }
+
+        self.controls = E('div')
+        self.flowSelector = E('div')
+        self.flowSelector.attr('class', 'dropdown').attr('style', 'display:inline-block;')
+        self.flowSelectorButton = E('button')
+        self.flowSelectorButton.attr('type', 'button').attr('class', 'btn btn-primary dropdown-toggle').attr('data-toggle', 'dropdown')
+        self.flowSelectorDiv = E('div')
+        self.flowSelectorDiv.attr('class','dropdown-menu')
+        self.flowSelector.append(self.flowSelectorButton, self.flowSelectorDiv)
+        let div = E('div')
+        div.attr('style', 'width:200px;display:inline-block;')
+        self.flowName = E('input')
+        self.flowName.attr('style', 'width:100%;')
+        div.append(self.flowName)
+        self.controls.append(self.flowSelector, div)
 
         self.flowEditorElement = E('div')
         self.flowEditorElement.attr("id", "flowEditorArea")
@@ -130,7 +150,7 @@ export class flowEditor extends ElementWrapper{
             }
         }
         self.properties.append(btn)
-        let div = E('div')
+        div = E('div')
         self.properties.append(div)
         let div2 = E('div')
         div2.attr('class', 'col-md-12')
@@ -176,7 +196,7 @@ export class flowEditor extends ElementWrapper{
         self.enableSplitter(true)
         self.enableSplitter(false)
 
-        self.append(self.flowEditorElement)
+        self.append(self.controls, self.flowEditorElement)
 
         document.onmousemove = function (event: MouseEvent) {
             _mouseClientX = event.clientX;
@@ -226,7 +246,6 @@ export class flowEditor extends ElementWrapper{
         })
         self.paper.on('link:connect', function (connection, z, c, v, b) {
             let newCon = new models.FlowConnector()
-            newCon.Guid = uuidv4()
             newCon.Id = self.getUniqueId(self)
             newCon.SourceFlowComponentd = connection.sourceView.model.attr('flowComponentId')
             newCon.TargetFlowComponentd = connection.targetView.model.attr('flowComponentId')
@@ -250,6 +269,10 @@ export class flowEditor extends ElementWrapper{
                 flowComponent.PositionY = y
             } 
         })
+
+        for (let f of self.flows) {
+            self.addFlowToSelection(self, f)
+        }
 
         if (self.flows.length == 0) {
             self.createNewFlow(self)
@@ -336,12 +359,19 @@ export class flowEditor extends ElementWrapper{
         return self.uniqueId
     }
 
+    addFlowToSelection(self: flowEditor, flow: models.Flow) {
+        let el = Element('a')
+        el.attr('class', 'dropdown-item')
+        el.innerText(flow.Name)
+        self.flowSelectorDiv.append(el)
+    }
+
     createNewFlow(self: flowEditor) {
         let newFlow = new models.Flow()
         newFlow.Id = self.getUniqueId(self)
-        newFlow.Guid = uuidv4()
         newFlow.Name = 'New flow';
         self.flows.push(newFlow)
+        self.addFlowToSelection(self, newFlow)
         self.setActiveFlow(self, newFlow)
     }
 
@@ -356,6 +386,14 @@ export class flowEditor extends ElementWrapper{
                 //todo
             }
         })
+        if (flow != null) {
+            self.flowSelectorButton.innerText(flow.Name)
+            $(self.flowName.element).val(flow.Name)
+        }
+        else {
+            self.flowSelectorButton.innerText('')
+            $(self.flowName.element).val()
+        }
     }
 
     getInfoTextFromProperty(self: flowEditor, item: models.FlowComponent, deviceProperty: models.DevicePropertyViewModel) {
@@ -502,7 +540,6 @@ export class flowEditor extends ElementWrapper{
                 component.DevicePropertyId = null
             }
             component.Id = self.getUniqueId(self)
-            component.Guid = uuidv4()
             let canvasRect = (self.canvas.element as HTMLElement).getBoundingClientRect()
             component.PositionX = mouseX - canvasRect.left
             component.PositionY = mouseY - canvasRect.top

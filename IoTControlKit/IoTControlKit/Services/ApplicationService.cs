@@ -2,27 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IoTControlKit.Framework;
+using NPoco;
 
 namespace IoTControlKit.Services
 {
-    public partial class ApplicationService : BaseService
+    public partial class ApplicationService : BaseService, Framework.IApplication, Framework.IDatabase
     {
-        public class SetDeviceProperties
-        {
-            public long DevicePropertyId { get; set; }
-            public string Value { get; set; }
-            public bool InternalOnly { get; set; } = false;
-        }
-
         private static ApplicationService _uniqueInstance = null;
         private static object _lockObject = new object();
-        private List<MQTT.Client> _mqttClients = new List<MQTT.Client>();
+        private List<Framework.IPlugin> _plugins = new List<Framework.IPlugin>();
+        private Dictionary<string, Framework.IPlugin> _plugInByName = new Dictionary<string, IPlugin>();
 
         public DatabaseService Database { get; private set; }
         public Services.Schedulers.SchedulerService Schedular { get; private set; }
 
-        public delegate void SetDevicePropertyValueHandler(NPoco.Database db, List<SetDeviceProperties> properties);
-        public event SetDevicePropertyValueHandler SetDevicePropertyValue;
+        public event Framework.SetDeviceProperties.SetDevicePropertyValueHandler SetDevicePropertyValue;
 
         private ApplicationService()
         {
@@ -46,6 +41,9 @@ namespace IoTControlKit.Services
             }
         }
 
+        public string RootDataFolder => throw new NotImplementedException();
+        public List<Framework.IPlugin> Plugins => _plugins;
+
         public void OnSetDevicePropertyValue(List<SetDeviceProperties> properties)
         {
             if (SetDevicePropertyValue != null)
@@ -60,32 +58,23 @@ namespace IoTControlKit.Services
         public void Run()
         {
             Database = new DatabaseService();
-            Database.ExecuteWithinTransaction((db, session) =>
-            {
-                var dcl = db.Fetch<Models.Application.DeviceController>();
-                foreach (var dc in dcl)
-                {
-                    dc.Ready = false;
-                    db.Save(dc);
-                }
 
-                var pl = db.Query<Models.Application.MQTTClient>().Where(x => x.Enabled).ToList();
-                foreach (var p in pl)
-                {
-                    var c = MQTT.ClientFactory.CreateClient(p);
-                    if (c != null)
-                    {
-                        _mqttClients.Add(c);
-                    }
-                }
-            });
+            //for now...
+            _plugins.Add(new IoTControlKit.Plugin.MQTT.Plugin());
+
+            foreach (var plugin in _plugins)
+            {
+                _plugInByName.TryAdd(plugin.Name, plugin);
+                plugin.Initialize(this, this, LoggerService.Instance);
+            }
 
             Schedular = new Schedulers.SchedulerService();
 
-            foreach (var c in _mqttClients)
+            foreach (var plugin in _plugins)
             {
-                c.Start();
+                plugin.Start();
             }
+
             Schedular.Start();
 
             Database.DatabaseChanged += Database_DatabaseChanged;
@@ -95,50 +84,18 @@ namespace IoTControlKit.Services
         {
             if (changes.Caller != this)
             {
-                if (changes.AffectedTables.Contains("MQTTClient"))
-                {
-                    var cf = new ChangesFilter<Models.Application.MQTTClient>(changes);
-                    foreach (var p in cf.Updated)
-                    {
-                        var m = (from a in _mqttClients where a.ClientSetting.Id == p.Id select a).FirstOrDefault();
-                        if (m != null)
-                        {
-                            _mqttClients.Remove(m);
-                            m.Dispose();
-                        }
-                        if (p.Enabled)
-                        {
-                            var c = MQTT.ClientFactory.CreateClient(p);
-                            if (c != null)
-                            {
-                                _mqttClients.Add(c);
-                                c.Start();
-                            }
-                        }
-                    }
-                    foreach (var p in cf.Deleted)
-                    {
-                        var m = (from a in _mqttClients where a.ClientSetting.Id == p.Id select a).FirstOrDefault();
-                        if (m != null)
-                        {
-                            _mqttClients.Remove(m);
-                            m.Dispose();
-                        }
-                    }
-                    foreach (var p in cf.Added)
-                    {
-                        if (p.Enabled)
-                        {
-                            var c = MQTT.ClientFactory.CreateClient(p);
-                            if (c != null)
-                            {
-                                _mqttClients.Add(c);
-                                c.Start();
-                            }
-                        }
-                    }
-                }
+                //nope at the moment
             }
+        }
+
+        public bool ExecuteWithinTransaction(Action<NPoco.Database, Guid> action, object caller = null, Action<bool> executeAfterTransaction = null, bool isUndoRedoAction = false)
+        {
+            return Database.ExecuteWithinTransaction(action, caller, executeAfterTransaction, isUndoRedoAction);
+        }
+
+        public void Execute(Action<NPoco.Database> action)
+        {
+            Database.Execute(action);
         }
     }
 }

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace IoTControlKit.ViewModels.Device
 {
-    public class DevicePropertyViewModelItem : Models.Application.DeviceProperty
+    public class DevicePropertyViewModelItem : Framework.Models.DeviceProperty
     {
         public string Value { get; set; }
     }

@@ -62,7 +62,7 @@ namespace IoTControlKit.Services.Schedulers
         {
             if (_disposing) return;
 
-            var cf = new ChangesFilter<Models.Application.DevicePropertyValue>(changes);
+            var cf = new ChangesFilter<Framework.Models.DevicePropertyValue>(changes);
             if (cf.Updated.Any() || cf.Added.Any())
             {
                 foreach (var p in cf.Added)
@@ -94,12 +94,12 @@ namespace IoTControlKit.Services.Schedulers
                     {
                         if (!_disposing)
                         {
-                            Dictionary<long, Models.Application.DevicePropertyValue> propertyValues = null;
+                            Dictionary<long, Framework.Models.DevicePropertyValue> propertyValues = null;
                             HashSet<long> changedProperties = null;
                             Dictionary<long, string> outputPropertyValues = new Dictionary<long, string>();
                             ApplicationService.Instance.Database.Execute((db) =>
                             {
-                                propertyValues = db.Fetch<Models.Application.DevicePropertyValue>().ToDictionary(x => x.DevicePropertyId, x => x);
+                                propertyValues = db.Fetch<Framework.Models.DevicePropertyValue>().ToDictionary(x => x.DevicePropertyId, x => x);
                                 changedProperties = _changedPropertyValues.ToHashSet();
                                 _changedPropertyValues.Clear();
                             });
@@ -109,7 +109,7 @@ namespace IoTControlKit.Services.Schedulers
                             }
                             if (outputPropertyValues.Any())
                             {
-                                ApplicationService.Instance.OnSetDevicePropertyValue((from a in outputPropertyValues select new ApplicationService.SetDeviceProperties() { DevicePropertyId = a.Key, Value = a.Value }).ToList());
+                                ApplicationService.Instance.OnSetDevicePropertyValue((from a in outputPropertyValues select new Framework.SetDeviceProperties() { DevicePropertyId = a.Key, Value = a.Value }).ToList());
                             }
                         }
                     }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace IoTControlKit.Models.Application
+namespace IoTControlKit.Framework.Models
 {
     /// <summary>
     /// A Device Controller is an endpoint which actually controls the device
@@ -14,10 +14,11 @@ namespace IoTControlKit.Models.Application
     [NPoco.TableName("DeviceController")]
     public class DeviceController: BasePoco
     {
-        public long? MQTTClientId { get; set; }
+        public string Plugin { get; set; }
         public string NormalizedName { get; set; }
         public string Name { get; set; }
         public string State { get; set; }
         public bool Ready { get; set; }
+        public bool Enabled { get; set; }
     }
 }

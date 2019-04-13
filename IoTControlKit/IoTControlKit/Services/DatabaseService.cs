@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IoTControlKit.Framework.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -160,7 +161,7 @@ namespace IoTControlKit.Services
                         if (_logTransactionForUndoRedo && (SuppressAllUndoExcludes || !_excludedForUndo.Contains(record.GetType())))
                         {
                             //get original poco
-                            var orgPoco = db.Fetch(record.GetType(), $"select * from {pd.TableInfo.TableName} where Id=@0", ((Models.Application.BasePoco)record).Id).First();
+                            var orgPoco = db.Fetch(record.GetType(), $"select * from {pd.TableInfo.TableName} where Id=@0", ((BasePoco)record).Id).First();
                             _undoRedoHandler.UpdatePoco(orgPoco, record);
                         }
                         break;

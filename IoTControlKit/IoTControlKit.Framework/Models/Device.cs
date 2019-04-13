@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace IoTControlKit.Models.Application
+namespace IoTControlKit.Framework.Models
 {
     [NPoco.TableName("Device")]
     public class Device: BasePoco

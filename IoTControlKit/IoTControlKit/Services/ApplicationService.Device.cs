@@ -8,21 +8,23 @@ namespace IoTControlKit.Services
 {
     public partial class ApplicationService : BaseService
     {
-        public void SaveMQTT(Models.Application.MQTTClient item)
+        public void SaveMQTT(dynamic item)
         {
-            Database.ExecuteWithinTransaction((db, session) =>
-            {
-                db.Save(item);
-            });
+            //todo
+            //Database.ExecuteWithinTransaction((db, session) =>
+            //{
+            //    db.Save(item);
+            //});
         }
 
-        public Models.Application.MQTTClient GetMQTT(long id)
+        public dynamic GetMQTT(long id)
         {
-            Models.Application.MQTTClient result = null;
-            Database.Execute((db) =>
-            {
-                result = db.Query<Models.Application.MQTTClient>().Where(x => x.Id == id).FirstOrDefault();
-            });
+            dynamic result = null;
+            //todo
+            //Database.Execute((db) =>
+            //{
+            //    result = db.Query<Models.Application.MQTTClient>().Where(x => x.Id == id).FirstOrDefault();
+            //});
             return result;
         }
 

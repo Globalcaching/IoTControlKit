@@ -3,9 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.421
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IoTControlKit", "IoTControlKit\IoTControlKit.csproj", "{53311BD7-396B-4A90-B88F-E43E89B42ACE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IoTControlKit", "IoTControlKit\IoTControlKit.csproj", "{53311BD7-396B-4A90-B88F-E43E89B42ACE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreateLanguageTable", "CreateLanguageTable\CreateLanguageTable.csproj", "{878E0982-5FC4-4A37-85B5-883A716800C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CreateLanguageTable", "CreateLanguageTable\CreateLanguageTable.csproj", "{878E0982-5FC4-4A37-85B5-883A716800C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IoTControlKit.Framework", "IoTControlKit.Framework\IoTControlKit.Framework.csproj", "{F843BA21-0E50-40DA-B511-546E61C5F04B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IoTControlKit.MQTT", "IoTControlKit.MQTT\IoTControlKit.MQTT.csproj", "{5F89F59C-E6F5-4894-88DB-DD5365B13C97}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,14 @@ Global
 		{878E0982-5FC4-4A37-85B5-883A716800C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{878E0982-5FC4-4A37-85B5-883A716800C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{878E0982-5FC4-4A37-85B5-883A716800C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F843BA21-0E50-40DA-B511-546E61C5F04B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F843BA21-0E50-40DA-B511-546E61C5F04B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F843BA21-0E50-40DA-B511-546E61C5F04B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F843BA21-0E50-40DA-B511-546E61C5F04B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F89F59C-E6F5-4894-88DB-DD5365B13C97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F89F59C-E6F5-4894-88DB-DD5365B13C97}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F89F59C-E6F5-4894-88DB-DD5365B13C97}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F89F59C-E6F5-4894-88DB-DD5365B13C97}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

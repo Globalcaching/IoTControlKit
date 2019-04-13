@@ -11,7 +11,7 @@ namespace IoTControlKit.Services.Schedulers
         {
         }
 
-        public virtual void Schedule(Dictionary<long, Models.Application.DevicePropertyValue> allPropertyValues, HashSet<long> inputChangedPropertyValues, Dictionary<long, string> outputPropertyValues)
+        public virtual void Schedule(Dictionary<long, Framework.Models.DevicePropertyValue> allPropertyValues, HashSet<long> inputChangedPropertyValues, Dictionary<long, string> outputPropertyValues)
         {
         }
     }

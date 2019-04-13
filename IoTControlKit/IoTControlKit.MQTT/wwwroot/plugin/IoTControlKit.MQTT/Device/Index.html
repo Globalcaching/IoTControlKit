@@ -1,0 +1,55 @@
+﻿<div class="modal fade" id="dialog-editMQTTProperty" tabindex="-1" role="dialog" aria-labelledby="editMQTTPropertyLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="editMQTTPropertyLabel">Edit MQTT Property</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <form role="form" class="form-horizontal">
+                    <div class="form-group">
+                        <label for="Name" class="col-sm-3 control-label">
+                            Name:
+                        </label>
+                        <div class="col-sm-9">
+                            <input class="form-control" name="Name" id="Name" data-bind='textInput: Name' />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="TcpServer" class="col-sm-3 control-label">
+                            TcpServer:
+                        </label>
+                        <div class="col-sm-9">
+                            <input class="form-control" name="TcpServer" id="TcpServer" data-bind='textInput: TcpServer' />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="BaseTopic" class="col-sm-3 control-label">
+                            BaseTopic:
+                        </label>
+                        <div class="col-sm-9">
+                            <input class="form-control" name="BaseTopic" id="BaseTopic" data-bind='textInput: BaseTopic' />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="MQTTType" class="col-sm-3 control-label">
+                            Type:
+                        </label>
+                        <div class="col-sm-9">
+                            <select class="form-control" name="MQTTType" id="MQTTType" data-bind="options: availableMQTTTypes, value: MQTTType"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-check-label col-sm-9 ml-sm-3">
+                            <input class="form-check-input" type="checkbox" name="Enabled" id="Enabled" data-bind='checked: Enabled'> Enabled
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="saveMQTTProperty()">Apply</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

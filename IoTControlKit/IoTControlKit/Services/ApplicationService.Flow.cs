@@ -13,9 +13,9 @@ namespace IoTControlKit.Services
             FlowViewModel result = new FlowViewModel();
             Database.Execute((db) =>
             {
-                result.Flows = db.Fetch<Models.Application.Flow>();
-                result.FlowComponents = db.Fetch<Models.Application.FlowComponent>();
-                result.FlowConnectors = db.Fetch<Models.Application.FlowConnector>();
+                result.Flows = db.Fetch<Framework.Models.Flow>();
+                result.FlowComponents = db.Fetch<Framework.Models.FlowComponent>();
+                result.FlowConnectors = db.Fetch<Framework.Models.FlowConnector>();
 
                 var sql = NPoco.Sql.Builder.Select("DeviceProperty.*")
                     .Append(", Device.Name as DeviceName")

@@ -6,45 +6,45 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IoTControlKit.Services.MQTT
+namespace IoTControlKit.Plugin.MQTT
 {
     public class Client: IDisposable
     {
-        protected Models.Application.MQTTClient _clientSetting { get; private set; }
-        protected Models.Application.DeviceController _deviceController { get; private set; }
+        protected MQTTClient _clientSetting { get; private set; }
+        protected Framework.Models.DeviceController _deviceController { get; private set; }
         protected IMqttClient _mqttClient { get; private set; }
         protected bool _subscribed { get; private set; }
 
-        public Client(Models.Application.MQTTClient poco)
+        public Client(MQTTClient poco)
         {
             _clientSetting = poco;
             _subscribed = false;
         }
 
-        public Models.Application.MQTTClient ClientSetting => _clientSetting;
+        public MQTTClient ClientSetting => _clientSetting;
 
         public virtual void Start()
         {
-            ApplicationService.Instance.SetDevicePropertyValue += Instance_SetDevicePropertyValue;
-            ApplicationService.Instance.Database.ExecuteWithinTransaction((db, session) => 
+            Plugin.Instance.Application.SetDevicePropertyValue += Instance_SetDevicePropertyValue;
+            Plugin.Instance.Database.ExecuteWithinTransaction((db, session) => 
             {
-                _deviceController = db.Query<Models.Application.DeviceController>().Where(x => x.MQTTClientId == _clientSetting.Id).FirstOrDefault();
-                if (_deviceController == null)
-                {
-                    var parts = _clientSetting.BaseTopic.Replace('/', '_').Split('#', 2);
-                    _deviceController = new Models.Application.DeviceController()
-                    {
-                        MQTTClientId = _clientSetting.Id,
-                        Name = _clientSetting.Name,
-                        NormalizedName = _clientSetting.Name,
-                        Ready = false
-                    };
-                    if (parts.Length > 0)
-                    {
-                        _deviceController.NormalizedName = parts[0];
-                    }
-                    db.Save(_deviceController);
-                }
+                _deviceController = db.Query<Framework.Models.DeviceController>().Where(x => x.Id == _clientSetting.Id).FirstOrDefault();
+                //if (_deviceController == null)
+                //{
+                //    var parts = _clientSetting.BaseTopic.Replace('/', '_').Split(new char[] { '#' }, 2);
+                //    _deviceController = new Framework.Models.DeviceController()
+                //    {
+                //        MQTTClientId = _clientSetting.Id,
+                //        Name = _clientSetting.Name,
+                //        NormalizedName = _clientSetting.Name,
+                //        Ready = false
+                //    };
+                //    if (parts.Length > 0)
+                //    {
+                //        _deviceController.NormalizedName = parts[0];
+                //    }
+                //    db.Save(_deviceController);
+                //}
             });
             var factory = new MqttFactory();
             _mqttClient = factory.CreateMqttClient();
@@ -55,7 +55,7 @@ namespace IoTControlKit.Services.MQTT
             Connect();
         }
 
-        private void Instance_SetDevicePropertyValue(NPoco.Database db, List<ApplicationService.SetDeviceProperties> properties)
+        private void Instance_SetDevicePropertyValue(NPoco.Database db, List<Framework.SetDeviceProperties> properties)
         {
             if (_mqttClient.IsConnected)
             {
@@ -67,7 +67,7 @@ namespace IoTControlKit.Services.MQTT
             }
         }
 
-        protected virtual void SetDevicePropertyValue(NPoco.Database db, List<ApplicationService.SetDeviceProperties> properties)
+        protected virtual void SetDevicePropertyValue(NPoco.Database db, List<Framework.SetDeviceProperties> properties)
         {
         }
 
@@ -78,7 +78,7 @@ namespace IoTControlKit.Services.MQTT
         private void _mqttClient_Disconnected(object sender, MqttClientDisconnectedEventArgs e)
         {
             _subscribed = false;
-            ApplicationService.Instance.Database.ExecuteWithinTransaction((db, session) =>
+            Plugin.Instance.Database.ExecuteWithinTransaction((db, session) =>
             {
                 _deviceController.Ready = false;
                 db.Save(_deviceController);
@@ -89,7 +89,7 @@ namespace IoTControlKit.Services.MQTT
 
         private void _mqttClient_Connected(object sender, MqttClientConnectedEventArgs e)
         {
-            ApplicationService.Instance.Database.ExecuteWithinTransaction((db, session) =>
+            Plugin.Instance.Database.ExecuteWithinTransaction((db, session) =>
             {
                 _deviceController.Ready = true;
                 db.Save(_deviceController);
@@ -122,15 +122,15 @@ namespace IoTControlKit.Services.MQTT
 
         protected virtual void ApplicationMessageReceived(object sender, MqttApplicationMessageReceivedEventArgs e)
         {
-            Services.LoggerService.Instance.LogInformation($"MTTQ Client {_clientSetting.Name} => From={e.ClientId} -> Message: Topic={e.ApplicationMessage?.Topic}, Payload={(e.ApplicationMessage?.Payload == null ? "" : Encoding.UTF8.GetString(e.ApplicationMessage.Payload))}, QoS={e.ApplicationMessage?.QualityOfServiceLevel}, Retain={e.ApplicationMessage?.Retain}");
+            Plugin.Instance.Logger.LogInformation($"MTTQ Client {_clientSetting.Name} => From={e.ClientId} -> Message: Topic={e.ApplicationMessage?.Topic}, Payload={(e.ApplicationMessage?.Payload == null ? "" : Encoding.UTF8.GetString(e.ApplicationMessage.Payload))}, QoS={e.ApplicationMessage?.QualityOfServiceLevel}, Retain={e.ApplicationMessage?.Retain}");
         }
 
         public void Dispose()
         {
             if (_mqttClient != null)
             {
-                ApplicationService.Instance.SetDevicePropertyValue -= Instance_SetDevicePropertyValue;
-                ApplicationService.Instance.Database.ExecuteWithinTransaction((db, session) =>
+                Plugin.Instance.Application.SetDevicePropertyValue -= Instance_SetDevicePropertyValue;
+                Plugin.Instance.Database.ExecuteWithinTransaction((db, session) =>
                 {
                     _deviceController.Ready = false;
                     db.Save(_deviceController);

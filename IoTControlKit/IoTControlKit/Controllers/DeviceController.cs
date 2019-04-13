@@ -43,7 +43,7 @@ namespace IoTControlKit.Controllers
         [HttpPost]
         public ActionResult ChangeDevicePropertyValue(long id, string value, bool internalOnly)
         {
-            ApplicationService.Instance.OnSetDevicePropertyValue(new List<ApplicationService.SetDeviceProperties>() { new ApplicationService.SetDeviceProperties() { DevicePropertyId = id, InternalOnly = internalOnly, Value = value } });
+            ApplicationService.Instance.OnSetDevicePropertyValue(new List<Framework.SetDeviceProperties>() { new Framework.SetDeviceProperties() { DevicePropertyId = id, InternalOnly = internalOnly, Value = value } });
             return Json(null);
         }
 
@@ -54,7 +54,7 @@ namespace IoTControlKit.Controllers
         }
 
         [HttpPost]
-        public ActionResult SaveMQTT(Models.Application.MQTTClient item)
+        public ActionResult SaveMQTT([FromBody] dynamic item)
         {
             ApplicationService.Instance.SaveMQTT(item);
             return Json(null);

@@ -4,43 +4,43 @@ using System.Linq;
 using System.Threading.Tasks;
 using MQTTnet;
 
-namespace IoTControlKit.Services.MQTT
+namespace IoTControlKit.Plugin.MQTT
 {
     public class HomieClient: Client
     {
-        private Dictionary<string, Models.Application.Device> _devices;
-        private Dictionary<long, Dictionary<string, Models.Application.DeviceProperty>> _properties;
-        private Dictionary<long, Models.Application.DeviceProperty> _propertyLookup; //DevicePropertyId -> DeviceProperty
+        private Dictionary<string, Framework.Models.Device> _devices;
+        private Dictionary<long, Dictionary<string, Framework.Models.DeviceProperty>> _properties;
+        private Dictionary<long, Framework.Models.DeviceProperty> _propertyLookup; //DevicePropertyId -> DeviceProperty
         private Dictionary<long, long> _propertyValues; //DevicePropertyId -> Id
         private int _skipTopicParts = 1;
 
-        public HomieClient(Models.Application.MQTTClient poco)
+        public HomieClient(MQTTClient poco)
             : base(poco)
         {
         }
 
         protected override void PrepareFirstConnect()
         {
-            ApplicationService.Instance.Database.ExecuteWithinTransaction((db, session) =>
+            Plugin.Instance.Database.ExecuteWithinTransaction((db, session) =>
             {
-                _devices = db.Fetch<Models.Application.Device>().ToDictionary(x => x.NormalizedName, x => x);
-                _properties = new Dictionary<long, Dictionary<string, Models.Application.DeviceProperty>>();
-                _propertyLookup = new Dictionary<long, Models.Application.DeviceProperty>();
+                _devices = db.Fetch<Framework.Models.Device>().ToDictionary(x => x.NormalizedName, x => x);
+                _properties = new Dictionary<long, Dictionary<string, Framework.Models.DeviceProperty>>();
+                _propertyLookup = new Dictionary<long, Framework.Models.DeviceProperty>();
                 foreach (var d in _devices.Values)
                 {
-                    var propsForDevice = db.Query<Models.Application.DeviceProperty>().Where(x => x.DeviceId == d.Id).ToList();
+                    var propsForDevice = db.Query<Framework.Models.DeviceProperty>().Where(x => x.DeviceId == d.Id).ToList();
                     _properties.Add(d.Id, propsForDevice.ToDictionary(x => x.NormalizedName, x => x));
                     foreach (var dp in propsForDevice)
                     {
                         _propertyLookup.Add(dp.Id, dp);
                     }
                 }
-                _propertyValues = db.Fetch<Models.Application.DevicePropertyValue>().ToDictionary(x => x.DevicePropertyId, x => x.Id);
+                _propertyValues = db.Fetch<Framework.Models.DevicePropertyValue>().ToDictionary(x => x.DevicePropertyId, x => x.Id);
             });
             _skipTopicParts = _clientSetting.BaseTopic.Split('/').Length-1;
         }
 
-        protected override void SetDevicePropertyValue(NPoco.Database db, List<ApplicationService.SetDeviceProperties> properties)
+        protected override void SetDevicePropertyValue(NPoco.Database db, List<Framework.SetDeviceProperties> properties)
         {
             if (_propertyLookup != null)
             {
@@ -73,10 +73,10 @@ namespace IoTControlKit.Services.MQTT
                                     break;
                             }
                         }
-                        Models.Application.DevicePropertyValue dpv = null;
+                        Framework.Models.DevicePropertyValue dpv = null;
                         if (!_propertyValues.TryGetValue(p.DevicePropertyId, out var pv))
                         {
-                            dpv = new Models.Application.DevicePropertyValue()
+                            dpv = new Framework.Models.DevicePropertyValue()
                             {
                                 DevicePropertyId = p.DevicePropertyId
                             };
@@ -85,7 +85,7 @@ namespace IoTControlKit.Services.MQTT
                         }
                         else
                         {
-                            dpv = db.Query<Models.Application.DevicePropertyValue>().Where(x => x.Id == pv).First();
+                            dpv = db.Query<Framework.Models.DevicePropertyValue>().Where(x => x.Id == pv).First();
                         }
                         if (string.Compare(dpv.Value, v) != 0)
                         {
@@ -132,7 +132,7 @@ namespace IoTControlKit.Services.MQTT
             var parts = e.ApplicationMessage.Topic.Split('/').Skip(_skipTopicParts).ToList();
             if (parts.Any() && parts[parts.Count-1] != "set")
             {
-                ApplicationService.Instance.Database.ExecuteWithinTransaction((db, session) =>
+                Plugin.Instance.Database.ExecuteWithinTransaction((db, session) =>
                 {
                     var payloadString = e.ApplicationMessage.ConvertPayloadToString();
                     if (parts[0].StartsWith("$"))
@@ -144,7 +144,7 @@ namespace IoTControlKit.Services.MQTT
                     {
                         if (!_devices.TryGetValue(parts[0], out var device))
                         {
-                            device = new Models.Application.Device()
+                            device = new Framework.Models.Device()
                             {
                                 DeviceControllerId = _deviceController.Id,
                                 NormalizedName = parts[0],
@@ -187,12 +187,12 @@ namespace IoTControlKit.Services.MQTT
                         {
                             if (!_properties.TryGetValue(device.Id, out var properties))
                             {
-                                properties = new Dictionary<string, Models.Application.DeviceProperty>();
+                                properties = new Dictionary<string, Framework.Models.DeviceProperty>();
                                 _properties.Add(device.Id, properties);
                             }
                             if (!properties.TryGetValue(parts[1], out var deviceProperty))
                             {
-                                deviceProperty = new Models.Application.DeviceProperty()
+                                deviceProperty = new Framework.Models.DeviceProperty()
                                 {
                                     DeviceId = device.Id,
                                     NormalizedName = parts[1]
@@ -201,7 +201,7 @@ namespace IoTControlKit.Services.MQTT
                                 properties.Add(deviceProperty.NormalizedName, deviceProperty);
                                 _propertyLookup.Add(deviceProperty.Id, deviceProperty);
 
-                                var propertyValue = new Models.Application.DevicePropertyValue()
+                                var propertyValue = new Framework.Models.DevicePropertyValue()
                                 {
                                      DevicePropertyId = deviceProperty.Id                                      
                                 };
@@ -262,7 +262,7 @@ namespace IoTControlKit.Services.MQTT
                                 //value of property
                                 if (!_propertyValues.TryGetValue(deviceProperty.Id, out var pvId))
                                 {
-                                    var propertyValue = new Models.Application.DevicePropertyValue()
+                                    var propertyValue = new Framework.Models.DevicePropertyValue()
                                     {
                                         DevicePropertyId = deviceProperty.Id
                                     };
@@ -270,7 +270,7 @@ namespace IoTControlKit.Services.MQTT
                                     _propertyValues.Add(deviceProperty.Id, propertyValue.Id);
                                     pvId = propertyValue.Id;
                                 }
-                                var pv = db.Query<Models.Application.DevicePropertyValue>().Where(x => x.Id == pvId).FirstOrDefault();
+                                var pv = db.Query<Framework.Models.DevicePropertyValue>().Where(x => x.Id == pvId).FirstOrDefault();
                                 if (pv != null)
                                 {
                                     pv.Value = payloadString;

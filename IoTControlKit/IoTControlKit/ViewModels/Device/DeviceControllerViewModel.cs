@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace IoTControlKit.ViewModels.Device
 {
-    public class DeviceControllerViewModelItem: Models.Application.DeviceController
+    public class DeviceControllerViewModelItem: Framework.Models.DeviceController
     {
     }
 
