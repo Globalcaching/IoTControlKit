@@ -85,5 +85,23 @@ TcpServer nvarchar(255) not null UNIQUE
                 c.Start();
             }
         }
+
+        public object EditController(NPoco.Database db, Framework.Models.DeviceController controller)
+        {
+            MQTTClient result = null;
+            if (controller != null)
+            {
+                result = db.Query<MQTTClient>().Where(x => x.DeviceControllerId == controller.Id).FirstOrDefault();
+            }
+            else
+            {
+                //todo
+            }
+            return result;
+        }
+
+        public void SaveController(NPoco.Database db, Framework.Models.DeviceController controller, dynamic pluginData)
+        {
+        }
     }
 }

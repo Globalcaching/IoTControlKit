@@ -49,6 +49,16 @@
     viewModel.Name = ko.observable('').extend({ required: "" });
     viewModel.Enabled = ko.observable(true);
 
+    var pluginRegistrations = [];
+
+    function registerPlugin(name, addEditControllerCallback, deleteControllerCallback) {
+        pluginRegistrations.push({
+            name: name,
+            addEditControllerCallback: addEditControllerCallback,
+            deleteControllerCallback
+        });
+    }
+
 @foreach (var plugin in IoTControlKit.Services.ApplicationService.Instance.Plugins)
 {
     @Html.Raw(Html.PluginFile(plugin, "Device", "Index.js"))
@@ -66,6 +76,24 @@
 
     function saveDeviceProperty() {
         $.post('@Url.Action("ChangeDevicePropertyValue", "Device")', { id: selectedItem.Id, value: viewModel.DevicePropertyValue(), internalOnly: viewModel.InternalOnly()});
+    }
+
+    function addEditController(item) {
+        selectedItem = item;
+        var pluginName = null;
+        var controllerId = null;
+        if (item != null) {
+            pluginName = item.Plugin;
+            controllerId = item.Id;
+        }
+        $.post('@Url.Action("EditController", "Device")', { pluginName: pluginName, id: controllerId }, function (response) {
+            var p = _.find(pluginRegistrations, function (o) { return o.name == pluginName; });
+            p.addEditControllerCallback(response.Controller, response.Plugin);
+        });
+    }
+
+    function saveController(name, controller, plugin) {
+        $.post('@Url.Action("SaveController", "Device")', { pluginName: name, controller: controller, plugin: JSON.stringify(plugin) });
     }
 
     function getDevicePropertiesList(device) {
@@ -144,8 +172,7 @@
             pagedList.addColumn("Ready", "@Html.T("Ready")")
                 .itemToHtml(function (item) { return item.Ready; });
             pagedList.addButton("Edit", "@Html.T("Edit")", "btn btn-primary btn-sm")
-                .showIf(function (item) { return item.MQTTClientId != null; })
-                .onclick(function (item) { editMQTTProperty(item); });
+                .onclick(function (item) { addEditController(item); });
 
             pagedList.refresh();
 

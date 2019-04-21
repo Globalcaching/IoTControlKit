@@ -97,5 +97,39 @@ namespace IoTControlKit.Services
         {
             Database.Execute(action);
         }
+
+        public object EditController(string pluginName, long? id)
+        {
+            object result = null;
+            if (_plugInByName.TryGetValue(pluginName, out var plugin))
+            {
+                Database.Execute((db) =>
+                {
+                    Framework.Models.DeviceController dc = null;
+                    if (id != null)
+                    {
+                        dc = db.Query<Framework.Models.DeviceController>().Where(x => x.Id == id).FirstOrDefault();
+                    }
+                    result = new
+                    {
+                        Controller = dc,
+                        Plugin = plugin.EditController(db, dc)
+                    };
+                });
+            }
+            return result;
+        }
+
+        public void SaveController(string pluginName, Framework.Models.DeviceController controller, dynamic pluginData)
+        {
+            if (_plugInByName.TryGetValue(pluginName, out var plugin))
+            {
+                Database.ExecuteWithinTransaction((db, session) =>
+                {
+                    db.Save(controller);
+                    plugin.SaveController(db, controller, pluginData);
+                });
+            }
+        }
     }
 }

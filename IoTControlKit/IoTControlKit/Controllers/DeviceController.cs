@@ -2,8 +2,11 @@
 using IoTControlKit.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -48,15 +51,20 @@ namespace IoTControlKit.Controllers
         }
 
         [HttpPost]
-        public ActionResult GetMQTT(long id)
+        public ActionResult EditController(string pluginName, long? id)
         {
-            return Json(ApplicationService.Instance.GetMQTT(id));
+            return Json(ApplicationService.Instance.EditController(pluginName, id));
         }
 
         [HttpPost]
-        public ActionResult SaveMQTT([FromBody] dynamic item)
+        public ActionResult SaveController(string pluginName, Framework.Models.DeviceController controller, string plugin)
         {
-            ApplicationService.Instance.SaveMQTT(item);
+            dynamic pluginData = null;
+            if (!string.IsNullOrEmpty(plugin))
+            {
+                pluginData = Newtonsoft.Json.JsonConvert.DeserializeObject<ExpandoObject>(plugin, new ExpandoObjectConverter());
+            }
+            ApplicationService.Instance.SaveController(pluginName, controller, pluginData);
             return Json(null);
         }
     }
