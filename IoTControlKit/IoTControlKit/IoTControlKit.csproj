@@ -35,6 +35,7 @@
   <ItemGroup>
     <ProjectReference Include="..\IoTControlKit.Framework\IoTControlKit.Framework.csproj" />
     <ProjectReference Include="..\IoTControlKit.MQTT\IoTControlKit.MQTT.csproj" />
+    <ProjectReference Include="..\IoTControlKit.PhilipsHue\IoTControlKit.PhilipsHue.csproj" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="wwwroot\flowEditor\ts\dialogs.ts" />

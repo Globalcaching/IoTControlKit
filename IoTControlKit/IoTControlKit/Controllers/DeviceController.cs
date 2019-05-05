@@ -59,7 +59,7 @@ namespace IoTControlKit.Controllers
         [HttpPost]
         public ActionResult SaveController(string pluginName, Framework.Models.DeviceController controller, string plugin)
         {
-            dynamic pluginData = null;
+            ExpandoObject pluginData = null;
             if (!string.IsNullOrEmpty(plugin))
             {
                 pluginData = Newtonsoft.Json.JsonConvert.DeserializeObject<ExpandoObject>(plugin, new ExpandoObjectConverter());

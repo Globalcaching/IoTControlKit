@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Text;
 
 namespace IoTControlKit.Framework
@@ -10,6 +11,6 @@ namespace IoTControlKit.Framework
         bool Initialize(IApplication app, IDatabase database, ILogger logger);
         void Start();
         object EditController(NPoco.Database db, Framework.Models.DeviceController controller);
-        void SaveController(NPoco.Database db, Framework.Models.DeviceController controller, dynamic pluginData);
+        void SaveController(NPoco.Database db, Framework.Models.DeviceController controller, ExpandoObject pluginData);
     }
 }

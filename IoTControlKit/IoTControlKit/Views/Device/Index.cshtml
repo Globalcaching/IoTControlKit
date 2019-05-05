@@ -2,6 +2,10 @@
     ViewData["Title"] = "Devices";
 }
 
+<div>
+    <button type="button" class="btn btn-primary" onclick="newController()">@Html.T("Add Controller")</button>
+</div>
+
 <div id="recordsList"></div>
 
 <div class="modal fade" id="dialog-editDeviceProperty" tabindex="-1" role="dialog" aria-labelledby="editDevicePropertyLabel" aria-hidden="true">
@@ -36,6 +40,34 @@
     </div>
 </div>
 
+<div class="modal fade" id="dialog-addController" tabindex="-1" role="dialog" aria-labelledby="addControllerLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="addControllerLabel">@Html.T("Add Controller")</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">@Html.T("Close")</span></button>
+            </div>
+            <div class="modal-body">
+                <form role="form" class="form-horizontal">
+                    <div class="form-group">
+                        <label for="addController" class="col-sm-3 control-label">
+                            Type:
+                        </label>
+                        <div class="col-sm-9">
+                            <select class="form-control" name="addController" id="addController" data-bind="options: availablePlugins, value: selectedPlugin"></select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="addController()">@Html.T("Add")</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">@Html.T("Cancel")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 @foreach (var plugin in IoTControlKit.Services.ApplicationService.Instance.Plugins)
 {
     @Html.Raw(Html.PluginFile(plugin, "Device", "Index.html"))
@@ -55,7 +87,7 @@
         pluginRegistrations.push({
             name: name,
             addEditControllerCallback: addEditControllerCallback,
-            deleteControllerCallback
+            deleteControllerCallback: deleteControllerCallback
         });
     }
 
@@ -63,6 +95,12 @@
 {
     @Html.Raw(Html.PluginFile(plugin, "Device", "Index.js"))
 }
+    var allPluginNames = [];
+    for (var pi = 0; pi < pluginRegistrations.length; pi++) {
+        allPluginNames.push(pluginRegistrations[pi].name);
+    }
+    viewModel.availablePlugins = ko.observableArray(allPluginNames);
+    viewModel.selectedPlugin = ko.observable('').extend({ required: "" });
 
     ko.applyBindings(viewModel);
 
@@ -76,6 +114,20 @@
 
     function saveDeviceProperty() {
         $.post('@Url.Action("ChangeDevicePropertyValue", "Device")', { id: selectedItem.Id, value: viewModel.DevicePropertyValue(), internalOnly: viewModel.InternalOnly()});
+    }
+
+    function newController() {
+        $('#dialog-addController').appendTo('body').modal();
+    }
+
+    function addController() {
+        var n = viewModel.selectedPlugin();
+        var p = _.find(pluginRegistrations, function (o) { return o.name == n; });
+        if (p != null) {
+            $.post('@Url.Action("EditController", "Device")', { pluginName: n, id: 0 }, function (response) {
+                p.addEditControllerCallback(response.Controller, response.Plugin);
+            });
+        }
     }
 
     function addEditController(item) {

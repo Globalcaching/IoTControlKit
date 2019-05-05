@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using IoTControlKit.Framework;
 
 namespace IoTControlKit.Plugin.MQTT
@@ -74,7 +76,6 @@ TcpServer nvarchar(255) not null UNIQUE
                 }
             });
 
-
             return true;
         }
 
@@ -95,13 +96,49 @@ TcpServer nvarchar(255) not null UNIQUE
             }
             else
             {
-                //todo
+                result = new MQTTClient()
+                {
+                    //DeviceControllerId = controller.Id,
+                    BaseTopic = "Homey/homie/#",
+                    MQTTType = "homie",
+                    Name = "Homey/homie",
+                    TcpServer = "localhost"
+                };
             }
             return result;
         }
 
-        public void SaveController(NPoco.Database db, Framework.Models.DeviceController controller, dynamic pluginData)
+        public void SaveController(NPoco.Database db, Framework.Models.DeviceController controller, ExpandoObject pluginData)
         {
+            var props = (IDictionary<string, object>)pluginData;
+            var m = new MQTTClient()
+            {
+                Id = (long)props["Id"],
+                DeviceControllerId = controller.Id,
+                BaseTopic = (string)props["BaseTopic"],
+                MQTTType = (string)props["MQTTType"],
+                Name = controller.Name,
+                TcpServer = (string)props["TcpServer"]
+            };
+            //todo: check values
+
+            db.Save(m);
+
+            Task.Run(() =>
+            {
+                lock (_mqttClients)
+                {
+                    var orgClient = (from a in _mqttClients where a.ClientSetting.Id == m.Id select a).FirstOrDefault();
+                    if (orgClient != null)
+                    {
+                        orgClient.Dispose();
+                        _mqttClients.Remove(orgClient);
+                    }
+                    var newClient = ClientFactory.CreateClient(m);
+                    _mqttClients.Add(newClient);
+                    newClient.Start();
+                }
+            });
         }
     }
 }

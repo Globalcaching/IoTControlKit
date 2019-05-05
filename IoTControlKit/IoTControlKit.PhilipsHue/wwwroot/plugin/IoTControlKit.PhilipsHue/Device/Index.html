@@ -1,8 +1,8 @@
-﻿<div class="modal fade" id="dialog-editMQTTProperty" tabindex="-1" role="dialog" aria-labelledby="editMQTTPropertyLabel" aria-hidden="true">
+﻿<div class="modal fade" id="dialog-editPhilipsHueProperty" tabindex="-1" role="dialog" aria-labelledby="editPhilipsHuePropertyLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="editMQTTPropertyLabel">Edit MQTT Property</h4>
+                <h4 class="modal-title" id="editPhilipsHuePropertyLabel">Edit Philips Hue Property</h4>
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
             </div>
             <div class="modal-body">
@@ -20,23 +20,7 @@
                             TcpServer:
                         </label>
                         <div class="col-sm-9">
-                            <input class="form-control" name="mqtt_TcpServer" id="mqtt_TcpServer" data-bind='textInput: mqtt_TcpServer' />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="mqtt_BaseTopic" class="col-sm-3 control-label">
-                            BaseTopic:
-                        </label>
-                        <div class="col-sm-9">
-                            <input class="form-control" name="mqtt_BaseTopic" id="mqtt_BaseTopic" data-bind='textInput: mqtt_BaseTopic' />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="mqtt_MQTTType" class="col-sm-3 control-label">
-                            Type:
-                        </label>
-                        <div class="col-sm-9">
-                            <select class="form-control" name="mqtt_MQTTType" id="mqtt_MQTTType" data-bind="options: mqtt_availableMQTTTypes, value: mqtt_MQTTType"></select>
+                            <input class="form-control" name="philipsHue_TcpServer" id="philipsHue_TcpServer" data-bind='textInput: philipsHue_TcpServer' />
                         </div>
                     </div>
                     <div class="form-group">
@@ -47,7 +31,7 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="saveMQTTController()">Apply</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="savePhilipsHueController()">Apply</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
             </div>
         </div>

@@ -1,28 +1,40 @@
-﻿viewModel.BaseTopic = ko.observable('').extend({ required: "" });
-viewModel.MQTTType = ko.observable('');
-viewModel.TcpServer = ko.observable('').extend({ required: "" });
-viewModel.availableMQTTTypes = ko.observableArray(['homie']);
+﻿viewModel.mqtt_BaseTopic = ko.observable('').extend({ required: "" });
+viewModel.mqtt_MQTTType = ko.observable('');
+viewModel.mqtt_TcpServer = ko.observable('').extend({ required: "" });
+viewModel.mqtt_availableMQTTTypes = ko.observableArray(['homie']);
 
 var selectedMqttClient;
 
 function editMQTTProperty(controller, mqttClient) {
     selectedMqttClient = mqttClient;
-    viewModel.Name(controller.Name);
-    viewModel.BaseTopic(mqttClient.BaseTopic);
-    viewModel.Enabled(controller.Enabled);
-    viewModel.MQTTType(mqttClient.MQTTType);
-    viewModel.TcpServer(mqttClient.TcpServer);
+
+    if (controller != null) {
+        viewModel.Name(controller.Name);
+        viewModel.Enabled(controller.Enabled);
+    }
+    else {
+        viewModel.Name('MQTT Client');
+        viewModel.Enabled(true);
+    }
+
+    viewModel.mqtt_BaseTopic(mqttClient.BaseTopic);
+    viewModel.mqtt_MQTTType(mqttClient.MQTTType);
+    viewModel.mqtt_TcpServer(mqttClient.TcpServer);
     $('#dialog-editMQTTProperty').appendTo('body').modal();
 }
 
-function saveMQTTProperty() {
-    selectedItem.Name = viewModel.Name();
+function saveMQTTController() {
+    if (selectedItem == null) {
+        selectedItem = {};
+        selectedItem.Id = 0;
+        selectedItem.Plugin = 'IoTControlKit.PhilipsHue';
+    }
     selectedMqttClient.Name = viewModel.Name();
 
-    selectedMqttClient.BaseTopic = viewModel.BaseTopic();
+    selectedMqttClient.BaseTopic = viewModel.mqtt_BaseTopic();
     selectedMqttClient.Enabled = viewModel.Enabled();
-    selectedMqttClient.MQTTType = viewModel.MQTTType();
-    selectedMqttClient.TcpServer = viewModel.TcpServer();
+    selectedMqttClient.MQTTType = viewModel.mqtt_MQTTType();
+    selectedMqttClient.TcpServer = viewModel.mqtt_TcpServer();
 
     saveController('IoTControlKit.MQTT', selectedItem, selectedMqttClient);
 }

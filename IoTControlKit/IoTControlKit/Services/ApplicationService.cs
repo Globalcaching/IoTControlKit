@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
 using IoTControlKit.Framework;
@@ -61,6 +62,7 @@ namespace IoTControlKit.Services
 
             //for now...
             _plugins.Add(new IoTControlKit.Plugin.MQTT.Plugin());
+            _plugins.Add(new IoTControlKit.Plugin.PhilipsHue.Plugin());
 
             foreach (var plugin in _plugins)
             {
@@ -120,12 +122,13 @@ namespace IoTControlKit.Services
             return result;
         }
 
-        public void SaveController(string pluginName, Framework.Models.DeviceController controller, dynamic pluginData)
+        public void SaveController(string pluginName, Framework.Models.DeviceController controller, ExpandoObject pluginData)
         {
             if (_plugInByName.TryGetValue(pluginName, out var plugin))
             {
                 Database.ExecuteWithinTransaction((db, session) =>
                 {
+                    controller.NormalizedName = controller.Name.Replace(" ", "_"); //for now
                     db.Save(controller);
                     plugin.SaveController(db, controller, pluginData);
                 });
